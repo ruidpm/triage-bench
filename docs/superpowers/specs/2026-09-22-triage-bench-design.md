@@ -203,8 +203,10 @@ Decision or exits with context.
 
 - Python 3.12+, `uv` for environment and lockfile, all dependencies pinned.
 - Dependencies: `von-sdk`, `anthropic`, `openai`, `fastapi`, `uvicorn`,
-  `pydantic`; dev: `pytest`, `ruff`, `mypy`. `datasets` only in the one-off
-  sampling script's optional group.
+  `pydantic`; dev: `pytest`, `ruff`, `mypy`. The one-off sampling script uses
+  only the standard library: it fetches PolyAI's canonical Banking77 `test.csv`
+  from GitHub, pinned to one commit, and writes rows in a seeded shuffled order
+  (ids are the upstream row index).
 - `.env.example` with the two key names. `.gitignore` covers `.env`, `runs/*`
   except `runs/sample.jsonl`, and the virtualenv.
 - MIT license. Banking77 attribution and CC-BY-4.0 notice in the README.
