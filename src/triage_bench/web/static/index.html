@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <title>Triage Bench</title>
+  <script>
+    // Apply a saved theme before first paint so the page never flashes the wrong one.
+    // Key and values mirror THEME in app.js; no saved value means follow the system.
+    (function () {
+      try {
+        var saved = localStorage.getItem("triage-bench-theme");
+        if (saved === "light" || saved === "dark") {
+          document.documentElement.dataset.theme = saved;
+        }
+      } catch (error) {
+        console.warn("Saved theme unavailable; following the system theme.", error);
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -23,6 +37,14 @@
       <label class="control">Routing threshold
         <input id="threshold" type="range" min="0" max="1" step="0.05" value="0.8">
         <output id="threshold-out" for="threshold">0.80</output></label>
+      <div class="control" role="radiogroup" aria-labelledby="theme-label">
+        <span id="theme-label">Theme</span>
+        <span class="segmented">
+          <label><input type="radio" name="theme" value="system" checked><span>System</span></label>
+          <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+          <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+        </span>
+      </div>
     </div>
     <p id="banner" class="banner" role="alert" hidden><span class="glyph" aria-hidden="true">!</span> <span id="banner-text"></span></p>
   </header>

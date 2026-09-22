@@ -84,6 +84,13 @@ const CHART = {
 };
 const LIGHT_SCHEME_QUERY = "(prefers-color-scheme: light)";
 
+// The inline script in index.html's <head> reads the same key and values before first paint.
+const THEME = {
+  storageKey: "triage-bench-theme",
+  system: "system",
+  explicit: ["light", "dark"],
+};
+
 /* ---------- DOM ---------- */
 
 const $ = (id) => document.getElementById(id);
@@ -114,6 +121,7 @@ const els = {
   rFallback: $("r-fallback"),
   rSaving: $("r-saving"),
   feedHeadRow: $("feed-head-row"),
+  themeInputs: document.querySelectorAll('input[name="theme"]'),
   feedBody: document.querySelector("#feed tbody"),
 };
 
@@ -763,6 +771,53 @@ function onPlayClick() {
   }
 }
 
+/* ---------- theme ---------- */
+
+function isExplicitTheme(choice) {
+  return THEME.explicit.includes(choice);
+}
+
+/** The theme the <head> script applied from storage, or "system". */
+function appliedTheme() {
+  const theme = document.documentElement.dataset.theme;
+  return isExplicitTheme(theme) ? theme : THEME.system;
+}
+
+function saveTheme(choice) {
+  try {
+    if (isExplicitTheme(choice)) {
+      localStorage.setItem(THEME.storageKey, choice);
+    } else {
+      localStorage.removeItem(THEME.storageKey);
+    }
+  } catch (error) {
+    // Storage can be blocked (private mode, site settings); the theme still applies this visit.
+    console.warn("Could not save the theme choice; it applies until reload.", error);
+  }
+}
+
+function applyTheme(choice) {
+  if (isExplicitTheme(choice)) {
+    document.documentElement.dataset.theme = choice;
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+  applyChartTheme();
+}
+
+function onThemeChange(event) {
+  const choice = event.target.value;
+  applyTheme(choice);
+  saveTheme(choice);
+}
+
+function renderThemeChoice() {
+  const current = appliedTheme();
+  for (const input of els.themeInputs) {
+    input.checked = input.value === current;
+  }
+}
+
 /* ---------- controls ---------- */
 
 function renderSpeed() {
@@ -777,6 +832,9 @@ function wireControls() {
   els.threshold.addEventListener("input", renderRouting);
   const lightScheme = window.matchMedia(LIGHT_SCHEME_QUERY);
   lightScheme.addEventListener("change", applyChartTheme);
+  for (const input of els.themeInputs) {
+    input.addEventListener("change", onThemeChange);
+  }
 }
 
 /* ---------- boot ---------- */
@@ -803,6 +861,7 @@ function applyMeta(meta) {
 }
 
 async function boot() {
+  renderThemeChoice();
   renderSpeed();
   wireControls();
   els.play.disabled = true;
