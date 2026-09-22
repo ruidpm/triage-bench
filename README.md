@@ -59,7 +59,7 @@ uv run --env-file .env triage-bench live
 
 | Finished run | Threshold at 0.95 | Phone (390 px) |
 |---|---|---|
-| ![Finished run at 200 of 200 with final totals, latency chart and recent-tickets feed](docs/screenshots/dashboard-finished.png) | ![Routing threshold slider at 0.95: 93% handled locally, 98.5% routed accuracy, 93% cost saving](docs/screenshots/dashboard-threshold-095.png) | ![Single-column phone layout at ticket 120: controls, stacked cards, chart and routing panel](docs/screenshots/dashboard-phone.png) |
+| ![Finished run at 200 of 200 with final totals, latency chart of all 200 tickets and the scrollable tickets feed](docs/screenshots/dashboard-finished.png) | ![Routing threshold slider at 0.95: 93% handled locally, 98.5% routed accuracy, 93% cost saving](docs/screenshots/dashboard-threshold-095.png) | ![Single-column phone layout at ticket 120: controls, stacked cards, chart and routing panel](docs/screenshots/dashboard-phone.png) |
 
 ## Fairness
 
