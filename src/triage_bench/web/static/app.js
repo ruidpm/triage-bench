@@ -58,6 +58,9 @@ const LIVE_RESTART_TITLE = "a live run cannot be restarted from the browser";
 const FREE_COST_TEXT = "local";
 const MESSAGES = {
   disconnected: "stream disconnected",
+  liveRefused:
+    "the server refused the stream: this live run already started (reload or second tab). " +
+    "One live run per process; restart the command for another run.",
   badFrame: "stream sent a frame the dashboard could not read",
   metaFailed: "could not load run details from the server",
   chartMissing: "chart library failed to load; the latency chart is unavailable",
@@ -121,6 +124,7 @@ const state = {
   lastTotals: null,
   lastTick: 0,
   source: null,
+  streamOpened: false,
   playing: false,
   finished: false,
   chart: null,
@@ -696,10 +700,17 @@ function handleDone() {
   announce(`Run finished after ${state.lastTick} tickets.${summary}`);
 }
 
+function handleStreamOpen() {
+  state.streamOpened = true;
+}
+
 function handleStreamError(error) {
   // EventSource retries on its own; close it so a dropped stream is visible, not silent.
-  console.error("Event stream disconnected.", error);
-  stopWithBanner(MESSAGES.disconnected);
+  // It cannot read the HTTP status, but a live stream that fails before opening was refused
+  // by the server's one-run-per-process guard (HTTP 409) or the server is gone.
+  const refused = state.mode === MODE_LIVE && !state.streamOpened;
+  console.error(refused ? "Live stream refused." : "Event stream disconnected.", error);
+  stopWithBanner(refused ? MESSAGES.liveRefused : MESSAGES.disconnected);
 }
 
 function stopWithBanner(message) {
@@ -716,6 +727,8 @@ function startStream() {
   resetDisplay();
   const speed = Number(els.speed.value);
   const source = new EventSource(`${API_STREAM}?speed=${encodeURIComponent(speed)}`);
+  state.streamOpened = false;
+  source.addEventListener("open", handleStreamOpen);
   source.addEventListener("message", handleMessage);
   source.addEventListener(DONE_EVENT, handleDone);
   source.addEventListener("error", handleStreamError);

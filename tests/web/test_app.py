@@ -43,3 +43,22 @@ def test_stream_forwards_events_unchanged_then_done() -> None:
 def test_index_served() -> None:
     response = make_client().get("/")
     assert response.status_code == 200 and "<html" in response.text.lower()
+
+
+def test_live_mode_allows_only_one_stream_per_process() -> None:
+    # A reload or second tab must not start a second paid run into the same run file.
+    client = make_client(mode="live")
+    with client.stream("GET", "/api/stream") as first:
+        assert first.status_code == 200
+        "".join(first.iter_text())
+    second = client.get("/api/stream")
+    assert second.status_code == 409
+    assert "restart" in second.json()["detail"]
+
+
+def test_replay_mode_allows_repeated_streams() -> None:
+    client = make_client()
+    for _ in range(2):
+        with client.stream("GET", "/api/stream?speed=20") as response:
+            assert response.status_code == 200
+            "".join(response.iter_text())

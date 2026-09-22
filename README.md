@@ -52,7 +52,7 @@ uv run --env-file .env triage-bench live
 
 - The Anthropic key must be scoped to a workspace; an unscoped key fails with a 400 asking for `anthropic-workspace-id`.
 - The first run downloads Von's weights (~1.6 GB) to `~/.cache/huggingface/hub/`; remove them with `uv run hf cache rm model/wfzyx/von-1.0`.
-- Open the page in one tab only: each stream connection starts a new, paid run. Results go to `runs/<timestamp>.jsonl`.
+- One live run per process: a reload or second tab is refused; restart the command for another run. Results go to `runs/<timestamp>.jsonl`.
 - Own tickets: `--tickets file.csv` with header `id,text,label`, labels from `src/triage_bench/domain/ticket.py`.
 
 ## Screenshots
