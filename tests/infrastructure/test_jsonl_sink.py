@@ -1,4 +1,5 @@
 import json
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -32,4 +33,32 @@ def test_missing_header(tmp_path: Path) -> None:
     p = tmp_path / "run.jsonl"
     p.write_text(json.dumps({"kind": "decision"}) + "\n")
     with pytest.raises(RunFileError, match="header"):
+        read_run(p)
+
+
+def _header() -> str:
+    return json.dumps({"kind": "tickets", "tickets": [asdict(t) for t in T]})
+
+
+def test_bad_ticket_value_reports_line_number(tmp_path: Path) -> None:
+    p = tmp_path / "run.jsonl"
+    p.write_text(json.dumps({"kind": "tickets", "tickets": [{"id": 1, "text": "x",
+                                                             "label": "nope"}]}) + "\n")
+    with pytest.raises(RunFileError, match="line 1: .*nope"):
+        read_run(p)
+
+
+def test_bad_decision_value_reports_line_number(tmp_path: Path) -> None:
+    p = tmp_path / "run.jsonl"
+    bad = {"kind": "decision", **asdict(D), "confidence": 2.0}
+    p.write_text(_header() + "\n" + json.dumps(bad) + "\n")
+    with pytest.raises(RunFileError, match="line 2: .*confidence"):
+        read_run(p)
+
+
+def test_decision_missing_field_reports_line_number(tmp_path: Path) -> None:
+    p = tmp_path / "run.jsonl"
+    incomplete = {"kind": "decision", "ticket_id": 1, "contestant": "von"}
+    p.write_text(_header() + "\n" + json.dumps(incomplete) + "\n")
+    with pytest.raises(RunFileError, match="line 2: "):
         read_run(p)

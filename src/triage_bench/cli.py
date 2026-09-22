@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from triage_bench.application.replay import CompleteRun, complete_tickets
 from triage_bench.application.runner import TickEvent
 from triage_bench.domain.metrics import Totals, summarise
 from triage_bench.domain.routing import DEFAULT_THRESHOLD, RoutingReport, confidence_gated_report
@@ -83,6 +84,24 @@ def _fail(message: str) -> int:
     return EXIT_CONFIG
 
 
+def _read_complete_run(path: Path) -> CompleteRun:
+    """Read a run and trim it to tickets every present contestant answered.
+
+    Raises RunFileError when the file is unreadable or has nothing to show.
+    """
+    tickets, decisions = read_run(path)
+    present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in decisions)]
+    if not present:
+        raise RunFileError(f"run file has no decisions: {path}")
+    kept = complete_tickets(tickets, decisions, present)
+    if not kept.tickets:
+        raise RunFileError(f"no ticket in {path} was answered by every contestant ({present})")
+    if kept.dropped:
+        print(f"note: dropped {kept.dropped} of {len(tickets)} tickets not answered by every "
+              f"contestant (partial run)", file=sys.stderr)
+    return kept
+
+
 def _serve(source_factory: "EventSource", meta: "RunMeta", host: str, port: int) -> int:
     import uvicorn
 
@@ -136,13 +155,13 @@ def cmd_replay(args: argparse.Namespace) -> int:
     from triage_bench.web.app import MODE_REPLAY, RunMeta
 
     try:
-        tickets, decisions = read_run(args.run)
+        run_data = _read_complete_run(args.run)
     except RunFileError as exc:
         return _fail(str(exc))
-    present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in decisions)]
+    present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in run_data.decisions)]
 
     def source() -> Iterator[TickEvent]:
-        return replay(tickets, decisions, present)
+        return replay(run_data.tickets, run_data.decisions, present)
 
     print(f"replaying {args.run}; open http://{args.host}:{args.port}", file=sys.stderr)
     meta = RunMeta(mode=MODE_REPLAY, run_name=args.run.stem, contestants=present)
@@ -151,17 +170,23 @@ def cmd_replay(args: argparse.Namespace) -> int:
 
 def cmd_report(args: argparse.Namespace) -> int:
     try:
-        tickets, decisions = read_run(args.run)
+        run_data = _read_complete_run(args.run)
     except RunFileError as exc:
         return _fail(str(exc))
-    truth = {t.id: t.label for t in tickets}
-    by_name = {c: [d for d in decisions if d.contestant == c] for c in CONTESTANT_ORDER}
+    truth = {t.id: t.label for t in run_data.tickets}
+    by_name = {c: [d for d in run_data.decisions if d.contestant == c] for c in CONTESTANT_ORDER}
     totals = [summarise(c, ds, truth) for c, ds in by_name.items() if ds]
-    print(format_totals_table(totals))
+    routing = None
     if by_name[ROUTING_PRIMARY] and by_name[ROUTING_FALLBACK]:
+        try:
+            routing = confidence_gated_report(
+                by_name[ROUTING_PRIMARY], by_name[ROUTING_FALLBACK], truth, args.threshold)
+        except ValueError as exc:
+            return _fail(f"cannot compute routing for {args.run}: {exc}")
+    print(format_totals_table(totals))
+    if routing is not None:
         print()
-        print(format_routing(confidence_gated_report(
-            by_name[ROUTING_PRIMARY], by_name[ROUTING_FALLBACK], truth, args.threshold)))
+        print(format_routing(routing))
     return EXIT_OK
 
 

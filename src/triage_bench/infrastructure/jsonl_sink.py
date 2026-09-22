@@ -43,14 +43,17 @@ def read_run(path: Path) -> tuple[list[Ticket], list[Decision]]:
         except json.JSONDecodeError as exc:
             raise RunFileError(f"line {number}: invalid JSON ({exc.msg})") from exc
         kind = record.pop("kind", None)
-        if kind == KIND_TICKETS:
-            tickets = [Ticket(**t) for t in record["tickets"]]
-        elif kind == KIND_DECISION:
-            if tickets is None:
-                raise RunFileError("run file has no tickets header line")
-            decisions.append(Decision(**record))
-        else:
+        if kind not in (KIND_TICKETS, KIND_DECISION):
             raise RunFileError(f"line {number}: unknown record kind {kind!r}")
+        if kind == KIND_DECISION and tickets is None:
+            raise RunFileError("run file has no tickets header line")
+        try:
+            if kind == KIND_TICKETS:
+                tickets = [Ticket(**t) for t in record["tickets"]]
+            else:
+                decisions.append(Decision(**record))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise RunFileError(f"line {number}: invalid {kind} record ({exc})") from exc
     if tickets is None:
         raise RunFileError("run file has no tickets header line")
     return tickets, decisions

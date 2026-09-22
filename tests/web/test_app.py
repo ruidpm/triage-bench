@@ -1,6 +1,7 @@
 import json
 from collections.abc import Iterator
 
+import pytest
 from fastapi.testclient import TestClient
 
 from triage_bench.application.replay import replay
@@ -62,3 +63,20 @@ def test_replay_mode_allows_repeated_streams() -> None:
         with client.stream("GET", "/api/stream?speed=20") as response:
             assert response.status_code == 200
             "".join(response.iter_text())
+
+
+class SourceBrokeError(RuntimeError):
+    pass
+
+
+def failing_source() -> Iterator[TickEvent]:
+    yield next(source())
+    raise SourceBrokeError("decider crashed mid-run")
+
+
+def test_source_exception_mid_stream_is_not_swallowed() -> None:
+    # The stream must not end with a normal "done" frame, which would hide the failure.
+    meta = RunMeta(mode="replay", run_name="fixture", contestants=["von"])
+    client = TestClient(create_app(failing_source, meta))
+    with pytest.raises(SourceBrokeError), client.stream("GET", "/api/stream?speed=20") as response:
+        "".join(response.iter_text())
