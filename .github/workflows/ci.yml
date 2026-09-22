@@ -12,3 +12,8 @@ jobs:
       - run: uv run ruff check .
       - run: uv run mypy src
       - run: uv run pytest
+      # Dashboard JS unit tests use Node's built-in runner; Node 22 runs the untyped ES modules.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test 'tests/web/js/*.test.mjs'

@@ -90,3 +90,11 @@ def test_source_exception_mid_stream_is_not_swallowed() -> None:
     client = TestClient(create_app(failing_source, meta))
     with pytest.raises(SourceBrokeError), client.stream("GET", "/api/stream?speed=20") as response:
         "".join(response.iter_text())
+
+
+@pytest.mark.parametrize("module", ["app.js", "pacer.js", "latency-points.js"])
+def test_dashboard_modules_are_served_as_javascript(module: str) -> None:
+    # Browsers refuse to run an ES module served with a non-JavaScript MIME type.
+    response = make_client().get(f"/static/{module}")
+    assert response.status_code == 200
+    assert "javascript" in response.headers["content-type"]

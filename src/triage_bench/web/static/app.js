@@ -1,5 +1,3 @@
-"use strict";
-
 /*
  * Triage Bench dashboard.
  *
@@ -14,7 +12,12 @@
  * them at the speed slider's current rate, so the slider changes the pace mid-run.
  * Pause stops that timer and keeps the queue (the stream keeps buffering), so Resume
  * continues from the next unrendered frame; Restart resets and replays from ticket 1.
+ * The pacing state machine lives in pacer.js and the chart points in latency-points.js,
+ * both pure and unit-tested (tests/web/js/).
  */
+
+import { appendLatencyPoints, isErrorDecision } from "./latency-points.js";
+import { createPacer } from "./pacer.js";
 
 const API_META = "/api/meta";
 const API_STREAM = "/api/stream";
@@ -151,16 +154,8 @@ const state = {
   source: null,
   streamOpened: false,
   maxSpeedTps: 0,
-  // Replay pacing: frames received but not yet rendered, the pending render timer, when the
-  // last frame was rendered (performance.now() ms), and whether the server sent `done`.
-  queue: [],
-  pacer: null,
-  lastRenderAt: -Infinity,
-  streamDone: false,
-  // playing: frames are being rendered; paused: a replay run is frozen mid-way (the stream
-  // may still be buffering into the queue).
-  playing: false,
-  paused: false,
+  // A run has started and has not finished or stopped (a paused replay is still running).
+  running: false,
   finished: false,
   chart: null,
   routingBroken: false,
@@ -213,10 +208,6 @@ function formatMs(ms) {
 
 function describe(key) {
   return CONTESTANTS[key] ?? { title: key, model: "" };
-}
-
-function isErrorDecision(decision) {
-  return decision.error !== null && decision.error !== undefined;
 }
 
 function outcomeOf(decision) {
@@ -438,12 +429,7 @@ function pushLatency(tick, decisions) {
   if (!chart) {
     return;
   }
-  for (const dataset of chart.data.datasets) {
-    const decision = decisions[dataset.contestant];
-    // Errors, and non-positive latencies a log axis cannot place, break the line.
-    const plottable = decision && !isErrorDecision(decision) && decision.latency_ms > 0;
-    dataset.data.push({ x: tick, y: plottable ? decision.latency_ms : null });
-  }
+  appendLatencyPoints(chart.data.datasets, tick, decisions);
   chart.update("none");
 }
 
@@ -717,18 +703,10 @@ function closeSource() {
   }
 }
 
-function clearPacer() {
-  clearTimeout(state.pacer);
-  state.pacer = null;
-  state.queue = [];
-  state.streamDone = false;
-}
-
 function closeStream() {
   closeSource();
-  clearPacer();
-  state.playing = false;
-  state.paused = false;
+  pacer.reset();
+  state.running = false;
 }
 
 /* ---------- replay pacing ---------- */
@@ -737,42 +715,26 @@ function tickIntervalMs() {
   return MS_PER_SECOND / Number(els.speed.value);
 }
 
-function schedulePacer() {
-  clearTimeout(state.pacer);
-  const wait = Math.max(0, state.lastRenderAt + tickIntervalMs() - performance.now());
-  state.pacer = setTimeout(pacerStep, wait);
-}
-
-function pacerStep() {
-  state.pacer = null;
-  const event = state.queue.shift();
-  if (event) {
-    onTick(event);
-    state.lastRenderAt = performance.now();
-  }
-  if (state.queue.length > 0) {
-    schedulePacer();
-  } else if (state.streamDone) {
-    finishRun();
-  }
-}
+const pacer = createPacer({
+  now: () => performance.now(),
+  schedule: (callback, delayMs) => setTimeout(callback, delayMs),
+  cancel: (timer) => clearTimeout(timer),
+  intervalMs: tickIntervalMs,
+  render: onTick,
+  onDrained: finishRun,
+});
 
 function enqueueTick(event) {
   if (state.mode === MODE_LIVE) {
     onTick(event);
     return;
   }
-  state.queue.push(event);
-  if (state.pacer === null && !state.paused) {
-    schedulePacer();
-  }
+  pacer.enqueue(event);
 }
 
 /** The slider moved: re-time the pending render from the last one at the new rate. */
 function repacePendingTick() {
-  if (state.pacer !== null) {
-    schedulePacer();
-  }
+  pacer.retime();
 }
 
 /* ---------- stream events ---------- */
@@ -801,9 +763,10 @@ function handleDone() {
   // Close now so EventSource does not reconnect when the server ends the response; a replay
   // finishes once the pacer has rendered every queued frame.
   closeSource();
-  state.streamDone = true;
-  if (state.mode === MODE_LIVE || (state.queue.length === 0 && state.pacer === null)) {
+  if (state.mode === MODE_LIVE) {
     finishRun();
+  } else {
+    pacer.markDone();
   }
 }
 
@@ -844,7 +807,7 @@ function streamUrl() {
 
 function startStream() {
   resetDisplay();
-  state.lastRenderAt = -Infinity;
+  pacer.reset();
   const source = new EventSource(streamUrl());
   state.streamOpened = false;
   source.addEventListener("open", handleStreamOpen);
@@ -852,8 +815,7 @@ function startStream() {
   source.addEventListener(DONE_EVENT, handleDone);
   source.addEventListener("error", handleStreamError);
   state.source = source;
-  state.playing = true;
-  state.paused = false;
+  state.running = true;
   state.finished = false;
   if (state.mode === MODE_LIVE) {
     setButton(BUTTON_TEXT.running, { disabled: true, title: LIVE_RESTART_TITLE });
@@ -866,26 +828,16 @@ function startStream() {
 
 /** Freeze rendering; the queue and everything on screen stay as they are. */
 function pauseReplay() {
-  clearTimeout(state.pacer);
-  state.pacer = null;
-  state.playing = false;
-  state.paused = true;
+  pacer.pause();
   setButton(BUTTON_TEXT.resume);
   announce(`Paused at ticket ${state.lastTick} of ${state.lastTotal}.`);
 }
 
-/** Continue from the next unrendered frame, shown straight away. */
+/** Continue from the next unrendered frame. */
 function resumeReplay() {
-  state.paused = false;
-  state.playing = true;
   setButton(BUTTON_TEXT.pause);
   announce(`Resumed at ticket ${state.lastTick} of ${state.lastTotal}.`);
-  state.lastRenderAt = -Infinity;
-  if (state.queue.length > 0) {
-    schedulePacer();
-  } else if (state.streamDone) {
-    finishRun();
-  }
+  pacer.resume();
 }
 
 function restartReplay() {
@@ -897,12 +849,12 @@ function onPlayClick() {
   if (state.mode === MODE_LIVE) {
     // The button is disabled from Start on, so a click here always starts the live run.
     startStream();
-  } else if (state.paused) {
-    resumeReplay();
-  } else if (state.playing) {
-    pauseReplay();
-  } else {
+  } else if (!state.running) {
     startStream();
+  } else if (pacer.isPaused()) {
+    resumeReplay();
+  } else {
+    pauseReplay();
   }
 }
 

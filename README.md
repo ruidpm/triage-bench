@@ -85,6 +85,7 @@ uv sync --all-groups
 uv run pytest
 uv run ruff check .
 uv run mypy src
+node --test 'tests/web/js/*.test.mjs'   # dashboard JS, Node 22+
 ```
 
 ## Licence and attribution
