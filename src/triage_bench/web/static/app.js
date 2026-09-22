@@ -22,7 +22,6 @@ const DONE_EVENT = "done";
 const MODE_LIVE = "live";
 const MS_PER_SECOND = 1000;
 
-const MAX_POINTS = 50;
 const MAX_FEED_ROWS = 12;
 const MAX_FEED_CHARS = 90;
 const ELLIPSIS = "…";
@@ -83,11 +82,15 @@ const MESSAGES = {
   routingIncomplete: "a ticket is missing a Von or Haiku decision; routing panel stopped",
 };
 
+// The chart keeps every ticket (200 x 3 points), so it draws lines without point markers
+// (markers appear on hover), skips crowded x labels, and does not animate per-tick updates.
+// Each point carries its own ticket number ({x: tick, y: ms}) on a linear axis, so there is
+// no separate labels array that could drift out of step with the data.
 const CHART = {
-  animationMs: 250,
-  lineWidth: 2,
-  pointRadius: 3,
-  pointHoverRadius: 5,
+  lineWidth: 1.5,
+  pointRadius: 0,
+  pointHoverRadius: 4,
+  xLabelGapPx: 12,
   pointRingWidth: 2,
   logTickMantissas: [1, 2, 5],
   fontSize: 12,
@@ -365,7 +368,6 @@ function buildChart() {
   state.chart = new Chart(els.latency, {
     type: "line",
     data: {
-      labels: [],
       datasets: state.contestants.map((key) => ({
         contestant: key,
         label: describe(key).title,
@@ -385,12 +387,20 @@ function buildChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: CHART.animationMs },
+      animation: false,
       interaction: { mode: "index", intersect: false },
       scales: {
         x: {
+          type: "linear",
+          bounds: "data",
           title: { display: true, text: "ticket" },
           grid: { display: false },
+          ticks: {
+            precision: 0,
+            autoSkip: true,
+            autoSkipPadding: CHART.xLabelGapPx,
+            maxRotation: 0,
+          },
         },
         y: {
           type: "logarithmic",
@@ -439,20 +449,13 @@ function pushLatency(tick, decisions) {
   if (!chart) {
     return;
   }
-  chart.data.labels.push(String(tick));
   for (const dataset of chart.data.datasets) {
     const decision = decisions[dataset.contestant];
     // Errors, and non-positive latencies a log axis cannot place, break the line.
     const plottable = decision && !isErrorDecision(decision) && decision.latency_ms > 0;
-    dataset.data.push(plottable ? decision.latency_ms : null);
+    dataset.data.push({ x: tick, y: plottable ? decision.latency_ms : null });
   }
-  if (chart.data.labels.length > MAX_POINTS) {
-    chart.data.labels.shift();
-    for (const dataset of chart.data.datasets) {
-      dataset.data.shift();
-    }
-  }
-  chart.update();
+  chart.update("none");
 }
 
 function resetChart() {
@@ -460,7 +463,6 @@ function resetChart() {
   if (!chart) {
     return;
   }
-  chart.data.labels = [];
   for (const dataset of chart.data.datasets) {
     dataset.data = [];
   }
@@ -993,7 +995,7 @@ function applyMeta(meta) {
   els.runName.textContent = meta.run_name;
   els.speedWrap.hidden = meta.mode === MODE_LIVE;
   els.restart.hidden = meta.mode === MODE_LIVE;
-  els.chartCaption.textContent = `ms, log scale, last ${MAX_POINTS}`;
+  els.chartCaption.textContent = "ms, log scale";
   buildCards();
   buildFeedHeads();
   buildChart();

@@ -30,8 +30,8 @@ const POLL_MS = 50;
 const CHROME_START_TIMEOUT_MS = 15_000;
 const PAGE_READY_TIMEOUT_MS = 15_000;
 const RUN_TIMEOUT_MS = 180_000;
-// Chart.js animates each update for 250 ms (CHART.animationMs in app.js). Mid-run shots are
-// taken this long after a fresh tick: past the animation, before the next tick at 2x (500 ms).
+// Mid-run shots are taken this long after a fresh tick: time for the chart and layout to
+// settle after the viewport resize, and still before the next tick at 2x (500 ms).
 const SETTLE_MS = 350;
 // Finished shots have no next tick to race, so they can wait longer for layout to settle.
 const FINISHED_SETTLE_MS = 1000;
