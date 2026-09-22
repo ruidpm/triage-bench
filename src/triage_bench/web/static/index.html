@@ -82,8 +82,9 @@
     </section>
 
     <section class="panel feed">
-      <h2>Recent tickets</h2>
-      <div class="table-scroll">
+      <h2 id="feed-title">Tickets <span class="muted">newest first</span></h2>
+      <!-- focusable so keyboard users can scroll it -->
+      <div class="table-scroll" role="region" aria-labelledby="feed-title" tabindex="0">
         <table id="feed">
           <thead><tr id="feed-head-row"><th scope="col">#</th><th scope="col">Message</th><th scope="col">Truth</th></tr></thead>
           <tbody></tbody>

@@ -22,9 +22,6 @@ const DONE_EVENT = "done";
 const MODE_LIVE = "live";
 const MS_PER_SECOND = 1000;
 
-const MAX_FEED_ROWS = 12;
-const MAX_FEED_CHARS = 90;
-const ELLIPSIS = "…";
 const PLACEHOLDER = "–";
 const PERCENT = 100;
 const LOG_BASE = 10;
@@ -210,14 +207,6 @@ function formatCost(usd) {
 
 function formatMs(ms) {
   return `${formatFixed(ms, DIGITS.latency)} ms`;
-}
-
-function truncate(text, maxChars) {
-  const chars = Array.from(text);
-  if (chars.length <= maxChars) {
-    return text;
-  }
-  return chars.slice(0, maxChars - 1).join("").trimEnd() + ELLIPSIS;
 }
 
 /* ---------- small helpers ---------- */
@@ -510,20 +499,34 @@ function outcomeCell(key, decision) {
   glyph.textContent = outcome.glyph;
   const label = document.createElement("span");
   label.className = "outcome-label";
-  // Errors show their message, so nothing is reachable only by hovering.
-  label.textContent = isErrorDecision(decision) ? decision.error : decision.label;
-  inner.append(glyph, label);
+  // Glyph and label stay together; only the confidence may wrap onto its own line.
+  const answer = document.createElement("span");
+  answer.className = "outcome-answer";
+  answer.append(glyph, label);
+  inner.append(answer);
   td.append(inner);
-  const spoken = isErrorDecision(decision) ? decision.error : decision.label;
-  td.setAttribute("aria-label", `${title}, ${outcome.word}: ${spoken}`);
+  if (isErrorDecision(decision)) {
+    // Errors show their message, so nothing is reachable only by hovering.
+    label.textContent = decision.error;
+    td.setAttribute("aria-label", `${title}, ${outcome.word}: ${decision.error}`);
+    return td;
+  }
+  const confidence = formatPercent(decision.confidence, DIGITS.confidence);
+  label.textContent = decision.label;
+  const conf = document.createElement("span");
+  conf.className = "outcome-conf";
+  conf.textContent = confidence;
+  inner.append(conf);
+  td.setAttribute("aria-label", `${title}, ${outcome.word}: ${decision.label}, ${confidence}`);
   return td;
 }
 
+/** Adds one row on top; earlier rows are never rebuilt, so 200 tickets stay cheap. */
 function prependFeedRow(event) {
   const row = document.createElement("tr");
   row.append(
     textCell(String(event.tick), "num"),
-    textCell(truncate(event.ticket.text, MAX_FEED_CHARS), "message"),
+    textCell(event.ticket.text, "message"),
   );
   const truth = document.createElement("td");
   truth.className = "truth";
@@ -535,9 +538,6 @@ function prependFeedRow(event) {
     row.append(outcomeCell(key, event.decisions[key]));
   }
   els.feedBody.prepend(row);
-  while (els.feedBody.rows.length > MAX_FEED_ROWS) {
-    els.feedBody.lastElementChild.remove();
-  }
 }
 
 /* ---------- routing (mirrors domain/routing.py) ---------- */

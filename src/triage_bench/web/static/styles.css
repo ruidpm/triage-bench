@@ -46,6 +46,8 @@
   --ring-size: 88px;
   --ring-thickness: 9px;
   --chart-height: 240px;
+  /* the ticket feed scrolls inside this height so the dashboard above stays in view */
+  --feed-max-height: 70vh;
   --main-max: 1400px;
 }
 
@@ -592,7 +594,8 @@ main {
 /* ---------- feed ---------- */
 
 .table-scroll {
-  overflow-x: auto;
+  max-height: var(--feed-max-height);
+  overflow: auto;
 }
 
 /* Mobile: each ticket is a stacked block, no sideways scrolling. */
@@ -695,6 +698,20 @@ main {
   overflow-wrap: normal;
 }
 
+.outcome-answer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.outcome-conf {
+  flex: none;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
 /* error messages can hold long unbroken tokens (URLs, ids): break anywhere at 360px */
 .outcome.err .outcome-label {
   overflow-wrap: anywhere;
@@ -723,6 +740,7 @@ main {
   :root {
     --gutter: 20px;
     --chart-height: 300px;
+    --feed-max-height: 60vh;
   }
 
   .controls {
@@ -754,8 +772,13 @@ main {
   .ticket { grid-area: ticket; }
   .routing { grid-area: routing; }
   .feed { grid-area: feed; }
+}
 
-  /* Tablet and up: a real table. */
+/* ---------- wide screens: the feed becomes a real table ---------- */
+
+/* Below this width seven columns (three with a label and confidence) do not fit, so the
+   feed keeps the stacked layout. */
+@media (min-width: 1024px) {
   #feed { display: table; }
   #feed thead {
     position: static;
@@ -770,12 +793,18 @@ main {
   #feed tbody tr { display: table-row; padding: 0; }
   #feed td { display: table-cell; }
 
+  /* The header stays visible while the rows scroll. A sticky cell loses its collapsed
+     border, so the rule under it is drawn as an inset shadow. */
   #feed th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     padding: 6px 8px;
     text-align: left;
     font-weight: 600;
     color: var(--ink-2);
-    border-bottom: 1px solid var(--axis);
+    background: var(--surface);
+    box-shadow: inset 0 -1px 0 var(--axis);
     white-space: nowrap;
   }
 
@@ -799,17 +828,19 @@ main {
   #feed td.outcome {
     display: table-cell;
     border-radius: 0;
-    white-space: nowrap;
   }
 
+  /* the confidence wraps under a long label rather than widening the column */
   .outcome-inner {
+    flex-wrap: wrap;
+    column-gap: 6px;
+    row-gap: 2px;
     justify-content: flex-start;
     text-align: left;
   }
 
   /* error messages may be long: let them wrap inside the table cell */
   .outcome.err {
-    white-space: normal;
     min-width: 16ch;
   }
 
