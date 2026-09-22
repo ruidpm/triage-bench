@@ -15,6 +15,9 @@ from triage_bench.infrastructure.csv_tickets import TicketLoadError, load_ticket
 from triage_bench.infrastructure.jsonl_sink import JsonlSink, RunFileError, read_run
 
 if TYPE_CHECKING:
+    import anthropic
+    import openai
+
     from triage_bench.web.app import EventSource, RunMeta
 
 EXIT_OK = 0
@@ -29,10 +32,25 @@ RUNS_DIR = Path("runs")
 RUN_TIMESTAMP_FORMAT = "%Y-%m-%dT%H-%M-%S"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
+# The SDKs' own retry-with-backoff on 429/5xx would otherwise run inside our measured
+# decide() latency; disabling it means a rate limit surfaces as a visible error instead.
+SDK_MAX_RETRIES = 0
 
 
 def missing_keys(env: Mapping[str, str]) -> list[str]:
     return [key for key in REQUIRED_KEYS if not env.get(key)]
+
+
+def build_claude_client() -> "anthropic.Anthropic":
+    import anthropic
+
+    return anthropic.Anthropic(max_retries=SDK_MAX_RETRIES)
+
+
+def build_openai_client() -> "openai.OpenAI":
+    import openai
+
+    return openai.OpenAI(max_retries=SDK_MAX_RETRIES)
 
 
 def default_run_path(now: datetime) -> Path:
@@ -85,9 +103,6 @@ def cmd_live(args: argparse.Namespace) -> int:
     except TicketLoadError as exc:
         return _fail("bad tickets file:\n  " + "\n  ".join(exc.problems))
 
-    import anthropic
-    import openai
-
     from triage_bench.application.decider import Decider
     from triage_bench.application.runner import run
     from triage_bench.infrastructure.claude_decider import ClaudeDecider
@@ -102,7 +117,7 @@ def cmd_live(args: argparse.Namespace) -> int:
         return _fail(f"Von failed to load: {exc}")
 
     deciders: list[Decider] = [
-        von, ClaudeDecider(anthropic.Anthropic()), OpenAIDecider(openai.OpenAI())
+        von, ClaudeDecider(build_claude_client()), OpenAIDecider(build_openai_client())
     ]
     out_path = args.out or default_run_path(datetime.now())
     sink = JsonlSink(out_path)

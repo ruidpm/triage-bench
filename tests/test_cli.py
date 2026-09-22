@@ -3,6 +3,9 @@ from pathlib import Path
 
 from triage_bench.cli import (
     EXIT_CONFIG,
+    SDK_MAX_RETRIES,
+    build_claude_client,
+    build_openai_client,
     default_run_path,
     format_routing,
     format_totals_table,
@@ -47,3 +50,13 @@ def test_live_without_keys_exits_with_config_error(monkeypatch, capsys) -> None:
 def test_report_on_missing_file_exits_with_config_error(capsys) -> None:  # type: ignore[no-untyped-def]
     assert main(["report", "--run", "runs/does-not-exist.jsonl"]) == EXIT_CONFIG
     assert "not found" in capsys.readouterr().err
+
+
+def test_client_factories_disable_sdk_auto_retries(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # A rate-limit or 5xx hit must surface as a visible error, not inflated latency from the
+    # SDK silently retrying with backoff inside our measured decide() call.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    assert SDK_MAX_RETRIES == 0
+    assert build_claude_client().max_retries == SDK_MAX_RETRIES
+    assert build_openai_client().max_retries == SDK_MAX_RETRIES
