@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 
 from triage_bench.domain.ticket import LABELS
 
+# mypy cannot see members of an Enum built from a computed dict ("Second argument of Enum()
+# must be ... literal"); building it from LABELS keeps one source of truth for the labels.
 IntentLabel = Enum("IntentLabel", {label: label for label in LABELS})  # type: ignore[misc]
 
 
