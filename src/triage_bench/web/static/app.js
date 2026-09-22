@@ -22,6 +22,8 @@ const ELLIPSIS = "…";
 const PLACEHOLDER = "–";
 const PERCENT = 100;
 const LOG_BASE = 10;
+// Floating-point slack when matching a tick's mantissa (e.g. 0.3 / 0.1 = 2.9999999999999996).
+const LOG_TICK_TOLERANCE = 1e-9;
 // Screen-reader summary cadence: announce progress every N ticks, plus start, pause and finish.
 const ANNOUNCE_EVERY_TICKS = 25;
 const EXACT_DECIMALS = 100;
@@ -304,7 +306,8 @@ function chartColours() {
 
 function isRoundLogTick(value) {
   const mantissa = value / LOG_BASE ** Math.floor(Math.log10(value));
-  return CHART.logTickMantissas.includes(Math.round(mantissa));
+  // Compare with a tolerance, not Math.round: rounding would let 1.5 (1500 ms) pass as 2.
+  return CHART.logTickMantissas.some((m) => Math.abs(mantissa - m) < LOG_TICK_TOLERANCE);
 }
 
 function keepRoundLogTicks(axis) {
