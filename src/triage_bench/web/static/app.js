@@ -720,13 +720,23 @@ const pacer = createPacer({
   schedule: (callback, delayMs) => setTimeout(callback, delayMs),
   cancel: (timer) => clearTimeout(timer),
   intervalMs: tickIntervalMs,
-  render: onTick,
+  render: renderFrame,
   onDrained: finishRun,
 });
 
+/** Render one frame; a frame that parses but cannot be rendered stops the run visibly. */
+function renderFrame(event) {
+  try {
+    onTick(event);
+  } catch (error) {
+    console.error("Could not render a stream frame; stopping the stream.", error, event);
+    stopWithBanner(MESSAGES.badFrame);
+  }
+}
+
 function enqueueTick(event) {
   if (state.mode === MODE_LIVE) {
-    onTick(event);
+    renderFrame(event);
     return;
   }
   pacer.enqueue(event);
