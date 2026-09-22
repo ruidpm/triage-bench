@@ -12,6 +12,8 @@
  * Replay pacing happens here, not on the server: the stream is opened at the server's
  * maximum speed (max_speed_tps from /api/meta), frames wait in a queue, and a timer renders
  * them at the speed slider's current rate, so the slider changes the pace mid-run.
+ * Pause stops that timer and keeps the queue (the stream keeps buffering), so Resume
+ * continues from the next unrendered frame; Restart resets and replays from ticket 1.
  */
 
 const API_META = "/api/meta";
@@ -29,7 +31,8 @@ const PERCENT = 100;
 const LOG_BASE = 10;
 // Floating-point slack when matching a tick's mantissa (e.g. 0.3 / 0.1 = 2.9999999999999996).
 const LOG_TICK_TOLERANCE = 1e-9;
-// Screen-reader summary cadence: announce progress every N ticks, plus start, stop and finish.
+// Screen-reader summary cadence: announce progress every N ticks, plus start, pause, resume
+// and finish.
 const ANNOUNCE_EVERY_TICKS = 25;
 const EXACT_DECIMALS = 100;
 
@@ -60,10 +63,14 @@ const OUTCOMES = {
 };
 const OUTCOME_CLASSES = Object.values(OUTCOMES).map((o) => o.className);
 
-const BUTTON_TEXT = { start: "Start", stop: "Stop", running: "Running", finished: "Finished" };
+const BUTTON_TEXT = {
+  start: "Start",
+  pause: "Pause",
+  resume: "Resume",
+  running: "Running",
+  finished: "Finished",
+};
 const LIVE_RESTART_TITLE = "a live run cannot be restarted from the browser";
-// Replay cannot resume mid-run: the next Start replays from ticket 1.
-const REPLAY_STOP_TITLE = "stop the replay; Start plays it again from ticket 1";
 const FREE_COST_TEXT = "local";
 const MESSAGES = {
   disconnected: "stream disconnected",
@@ -104,6 +111,7 @@ const els = {
   runName: $("run-name"),
   tick: $("tick"),
   play: $("play"),
+  restart: $("restart"),
   speed: $("speed"),
   speedWrap: $("speed-wrap"),
   speedOut: $("speed-out"),
@@ -149,7 +157,10 @@ const state = {
   pacer: null,
   lastRenderAt: -Infinity,
   streamDone: false,
+  // playing: frames are being rendered; paused: a replay run is frozen mid-way (the stream
+  // may still be buffering into the queue).
   playing: false,
+  paused: false,
   finished: false,
   chart: null,
   routingBroken: false,
@@ -685,9 +696,10 @@ function resetDisplay() {
 
 /* ---------- stream control ---------- */
 
-function setButton(text, { pressed = false, disabled = false, title = "" } = {}) {
+function setButton(text, { disabled = false, title = "" } = {}) {
+  // The label itself names the action (Pause / Resume), so the button is not a toggle and
+  // carries no aria-pressed.
   els.play.textContent = text;
-  els.play.setAttribute("aria-pressed", String(pressed));
   els.play.disabled = disabled;
   if (title) {
     els.play.title = title;
@@ -714,6 +726,7 @@ function closeStream() {
   closeSource();
   clearPacer();
   state.playing = false;
+  state.paused = false;
 }
 
 /* ---------- replay pacing ---------- */
@@ -748,7 +761,7 @@ function enqueueTick(event) {
     return;
   }
   state.queue.push(event);
-  if (state.pacer === null) {
+  if (state.pacer === null && !state.paused) {
     schedulePacer();
   }
 }
@@ -811,11 +824,12 @@ function stopWithBanner(message) {
   if (state.mode === MODE_LIVE) {
     setButton(BUTTON_TEXT.start, { disabled: true, title: LIVE_RESTART_TITLE });
   } else {
+    // A replay keeps what it rendered; Start (or Restart) replays from ticket 1.
     setButton(BUTTON_TEXT.start);
   }
 }
 
-/* ---------- start / stop ---------- */
+/* ---------- start / pause / resume / restart ---------- */
 
 function streamUrl() {
   // Live runs are never paced; replays arrive as fast as the server allows and the pacer
@@ -837,24 +851,54 @@ function startStream() {
   source.addEventListener("error", handleStreamError);
   state.source = source;
   state.playing = true;
+  state.paused = false;
   state.finished = false;
   if (state.mode === MODE_LIVE) {
-    setButton(BUTTON_TEXT.running, { pressed: true, disabled: true, title: LIVE_RESTART_TITLE });
+    setButton(BUTTON_TEXT.running, { disabled: true, title: LIVE_RESTART_TITLE });
   } else {
-    setButton(BUTTON_TEXT.stop, { pressed: true, title: REPLAY_STOP_TITLE });
+    setButton(BUTTON_TEXT.pause);
+    els.restart.disabled = false;
   }
   announce("Run started.");
 }
 
-function stopStream() {
+/** Freeze rendering; the queue and everything on screen stay as they are. */
+function pauseReplay() {
+  clearTimeout(state.pacer);
+  state.pacer = null;
+  state.playing = false;
+  state.paused = true;
+  setButton(BUTTON_TEXT.resume);
+  announce(`Paused at ticket ${state.lastTick} of ${state.lastTotal}.`);
+}
+
+/** Continue from the next unrendered frame, shown straight away. */
+function resumeReplay() {
+  state.paused = false;
+  state.playing = true;
+  setButton(BUTTON_TEXT.pause);
+  announce(`Resumed at ticket ${state.lastTick} of ${state.lastTotal}.`);
+  state.lastRenderAt = -Infinity;
+  if (state.queue.length > 0) {
+    schedulePacer();
+  } else if (state.streamDone) {
+    finishRun();
+  }
+}
+
+function restartReplay() {
   closeStream();
-  setButton(BUTTON_TEXT.start);
-  announce(`Stopped at ticket ${state.lastTick} of ${state.lastTotal}.`);
+  startStream();
 }
 
 function onPlayClick() {
-  if (state.playing) {
-    stopStream();
+  if (state.mode === MODE_LIVE) {
+    // The button is disabled from Start on, so a click here always starts the live run.
+    startStream();
+  } else if (state.paused) {
+    resumeReplay();
+  } else if (state.playing) {
+    pauseReplay();
   } else {
     startStream();
   }
@@ -917,6 +961,7 @@ function renderSpeed() {
 
 function wireControls() {
   els.play.addEventListener("click", onPlayClick);
+  els.restart.addEventListener("click", restartReplay);
   els.speed.addEventListener("input", renderSpeed);
   els.speed.addEventListener("input", repacePendingTick);
   els.threshold.addEventListener("input", renderRouting);
@@ -947,6 +992,7 @@ function applyMeta(meta) {
   els.mode.textContent = meta.mode;
   els.runName.textContent = meta.run_name;
   els.speedWrap.hidden = meta.mode === MODE_LIVE;
+  els.restart.hidden = meta.mode === MODE_LIVE;
   els.chartCaption.textContent = `ms, log scale, last ${MAX_POINTS}`;
   buildCards();
   buildFeedHeads();

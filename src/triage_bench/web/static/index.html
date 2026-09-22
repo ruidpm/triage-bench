@@ -30,7 +30,10 @@
     </div>
     <span id="tick" class="tick" aria-label="tickets processed">0 / 0</span>
     <div class="controls">
-      <button id="play" type="button" aria-pressed="false">Start</button>
+      <div class="buttons">
+        <button id="play" type="button">Start</button>
+        <button id="restart" class="secondary" type="button" aria-label="Restart from ticket 1" disabled>Restart</button>
+      </div>
       <label id="speed-wrap" class="control">Speed
         <input id="speed" type="range" min="0.5" max="10" step="0.5" value="2">
         <output id="speed-out" for="speed">2×</output></label>

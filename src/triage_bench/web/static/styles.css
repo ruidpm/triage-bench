@@ -311,6 +311,26 @@ button {
   cursor: pointer;
 }
 
+/* Start / Pause / Resume, then Restart (replay only) */
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.buttons #play {
+  flex: 1 1 auto;
+}
+
+button.secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--axis);
+}
+
+button[hidden] {
+  display: none;
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
