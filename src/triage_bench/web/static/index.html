@@ -1,1 +1,96 @@
-<!doctype html><html><body>Triage Bench</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Triage Bench</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">
+      <h1>Triage Bench</h1>
+      <span id="mode" class="badge"></span>
+      <span id="run-name" class="muted run-name"></span>
+    </div>
+    <span id="tick" class="tick" aria-label="tickets processed">0 / 0</span>
+    <div class="controls">
+      <button id="play" type="button" aria-pressed="false">Start</button>
+      <label id="speed-wrap" class="control">Speed
+        <input id="speed" type="range" min="0.5" max="10" step="0.5" value="2">
+        <output id="speed-out" for="speed">2×</output></label>
+      <label class="control">Routing threshold
+        <input id="threshold" type="range" min="0" max="1" step="0.05" value="0.8">
+        <output id="threshold-out" for="threshold">0.80</output></label>
+    </div>
+    <p id="banner" class="banner" role="alert" hidden><span class="glyph" aria-hidden="true">!</span> <span id="banner-text"></span></p>
+  </header>
+
+  <main>
+    <section id="cards" class="cards" aria-live="polite" aria-label="Contestants"></section>
+
+    <section class="panel ticket">
+      <h2>Current ticket</h2>
+      <p id="ticket-text" class="ticket-text">Waiting for the first ticket…</p>
+      <p class="muted">True label: <code id="ticket-label">–</code></p>
+    </section>
+
+    <section class="panel chart">
+      <h2>Latency per ticket <span class="muted">ms, log scale, last 50</span></h2>
+      <div class="chart-box">
+        <canvas id="latency" role="img" aria-label="Latency per ticket, one line per contestant. The contestant cards list p50 latency."></canvas>
+      </div>
+    </section>
+
+    <section class="panel routing" id="routing">
+      <h2>Confidence-gated routing</h2>
+      <p id="routing-text" class="muted">Von answers when confident, otherwise Haiku answers.</p>
+      <dl class="kv kv-large">
+        <dt>Handled locally</dt><dd id="r-local">–</dd>
+        <dt>Routed accuracy</dt><dd id="r-acc">–</dd>
+        <dt>Routed cost</dt><dd id="r-cost">–</dd>
+        <dt>Haiku alone</dt><dd id="r-fallback">–</dd>
+        <dt>Cost saving</dt><dd id="r-saving">–</dd>
+      </dl>
+    </section>
+
+    <section class="panel feed">
+      <h2>Recent tickets</h2>
+      <div class="table-scroll">
+        <table id="feed">
+          <thead><tr id="feed-head-row"><th scope="col">#</th><th scope="col">Message</th><th scope="col">Truth</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <template id="card-template">
+    <article class="card" data-contestant="">
+      <header class="card-head">
+        <span class="swatch" aria-hidden="true"></span>
+        <div>
+          <h3 class="card-name"></h3>
+          <p class="card-model muted"></p>
+        </div>
+      </header>
+      <p class="verdict"><span class="glyph" aria-hidden="true"></span><span class="verdict-label">–</span><span class="verdict-conf muted"></span></p>
+      <div class="card-body">
+        <div class="ring" role="img" aria-label="accuracy not yet known"><span class="ring-value">–</span><span class="ring-caption">accuracy</span></div>
+        <dl class="kv">
+          <dt>p50 latency</dt><dd class="p50">–</dd>
+          <dt>cost so far</dt><dd class="cost">–</dd>
+          <dt>ECE</dt><dd class="ece">–</dd>
+          <dt>errors</dt><dd class="errors">0</dd>
+        </dl>
+      </div>
+    </article>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"
+          integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
+          crossorigin="anonymous"></script>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
