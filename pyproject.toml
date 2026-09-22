@@ -14,9 +14,6 @@ dependencies = [
     "uvicorn>=0.30",
 ]
 
-[project.optional-dependencies]
-sampling = ["datasets>=3.0"]
-
 [project.scripts]
 triage-bench = "triage_bench.cli:main"
 
