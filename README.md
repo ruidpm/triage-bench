@@ -41,7 +41,7 @@ uv sync
 uv run triage-bench replay        # open http://127.0.0.1:8000, press Start
 ```
 
-`uv sync` installs PyTorch (Von's dependency), about 800 MB in total.
+`uv sync` installs PyTorch (Von's dependency): about 800 MB on macOS; several GB on Linux (CUDA PyTorch).
 
 ## Quick start: live
 
