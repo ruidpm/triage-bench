@@ -130,7 +130,7 @@ def cmd_live(args: argparse.Namespace) -> int:
 
     try:
         von = VonDecider.from_sdk()
-        print("loading Von model (first run downloads ~1.5 GB)...", file=sys.stderr)
+        print("loading Von model (first run downloads ~1.6 GB)...", file=sys.stderr)
         von.warm_up()
     except Exception as exc:  # startup failure: report and exit, never run half a bench
         return _fail(f"Von failed to load: {exc}")
