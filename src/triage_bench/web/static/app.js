@@ -24,7 +24,7 @@ const PERCENT = 100;
 const LOG_BASE = 10;
 // Floating-point slack when matching a tick's mantissa (e.g. 0.3 / 0.1 = 2.9999999999999996).
 const LOG_TICK_TOLERANCE = 1e-9;
-// Screen-reader summary cadence: announce progress every N ticks, plus start, pause and finish.
+// Screen-reader summary cadence: announce progress every N ticks, plus start, stop and finish.
 const ANNOUNCE_EVERY_TICKS = 25;
 const EXACT_DECIMALS = 100;
 
@@ -55,8 +55,10 @@ const OUTCOMES = {
 };
 const OUTCOME_CLASSES = Object.values(OUTCOMES).map((o) => o.className);
 
-const BUTTON_TEXT = { start: "Start", pause: "Pause", running: "Running", finished: "Finished" };
+const BUTTON_TEXT = { start: "Start", stop: "Stop", running: "Running", finished: "Finished" };
 const LIVE_RESTART_TITLE = "a live run cannot be restarted from the browser";
+// Replay cannot resume mid-run: the next Start replays from ticket 1.
+const REPLAY_STOP_TITLE = "stop the replay; Start plays it again from ticket 1";
 const FREE_COST_TEXT = "local";
 const MESSAGES = {
   disconnected: "stream disconnected",
@@ -742,20 +744,20 @@ function startStream() {
   if (state.mode === MODE_LIVE) {
     setButton(BUTTON_TEXT.running, { pressed: true, disabled: true, title: LIVE_RESTART_TITLE });
   } else {
-    setButton(BUTTON_TEXT.pause, { pressed: true });
+    setButton(BUTTON_TEXT.stop, { pressed: true, title: REPLAY_STOP_TITLE });
   }
   announce("Run started.");
 }
 
-function pauseStream() {
+function stopStream() {
   closeStream();
   setButton(BUTTON_TEXT.start);
-  announce(`Paused at ticket ${state.lastTick} of ${state.lastTotal}.`);
+  announce(`Stopped at ticket ${state.lastTick} of ${state.lastTotal}.`);
 }
 
 function onPlayClick() {
   if (state.playing) {
-    pauseStream();
+    stopStream();
   } else {
     startStream();
   }
