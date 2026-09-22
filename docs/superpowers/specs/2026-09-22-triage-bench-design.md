@@ -153,7 +153,7 @@ with a single-column layout below 768 px so it also works on a phone.
 
 Sections, top to bottom:
 
-1. **Header**: run name, mode badge (LIVE / REPLAY), tick counter, play/pause,
+1. **Header**: run name, mode badge (LIVE / REPLAY), tick counter, start/stop,
    speed control (replay only), routing-threshold slider.
 2. **Contestant cards**, three across: name, current verdict with confidence,
    green or red border for the current ticket, accuracy ring, p50 latency,
@@ -171,11 +171,11 @@ Colours and typography are decided at implementation time following the
 
 Errors are values in the domain. A `Decision` carries an optional `error` string.
 
-- API failure after SDK retries: the Decision records the error, counts as
-  incorrect, contributes no latency or cost, and the card shows a grey "error"
-  verdict. The run continues.
+- API failure (SDK auto-retries disabled, `SDK_MAX_RETRIES = 0`): the Decision
+  records the error, counts as incorrect, contributes no latency or cost, and the
+  card shows a grey "error" verdict. The run continues.
 - Structured-output response that fails schema validation: treated as an API
-  failure for that ticket, logged with the raw response.
+  failure for that ticket; only the exception message (`str(exc)`) is kept.
 - Von model fails to load: the CLI exits before the run with the underlying error.
 - Missing API key in live mode: exit before the run naming the variable.
 - Bad tickets CSV: exit before the run listing the offending rows.
@@ -214,8 +214,8 @@ Decision or exits with context.
 - README: what it is, a screenshot or GIF of the dashboard, quick start for
   replay (no keys) and live (keys), the results table from `runs/sample.jsonl`,
   the routing punchline, and a **Caveats** section stating plainly that Von is a
-  395M stand-in, not Jev; that laptop latency is 60 to 200 ms, not the README's
-  GPU numbers; and that LLM self-reported confidence is not a calibrated
+  395M stand-in, not Jev; that laptop latency is ~150-300 ms on an M2 (174 ms
+  p50 measured), not the model card's GPU numbers; and that LLM self-reported confidence is not a calibrated
   probability.
 
 ## 10. Open items resolved during brainstorming
