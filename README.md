@@ -18,18 +18,18 @@ Von is an open-source 395M ModernBERT System One model (returns a choice plus pr
 
 200 Banking77 tickets, 2026-09-22, Apple M2 16 GB (Von on MPS), total API cost ≈ $0.14, 0 errors. `uv run triage-bench report`:
 
-```
 | contestant | accuracy | p50 ms | p95 ms | cost | ECE |
 |---|---|---|---|---|---|
 | von | 97.0% | 174 | 244 | $0.0000 | 0.025 |
 | haiku | 100.0% | 897 | 1243 | $0.1256 | 0.053 |
 | luna | 99.5% | 1199 | 1941 | $0.0164 | 0.007 |
 
-Routing at threshold 0.80: von handled 97% locally, rest to haiku.
-  routed:   accuracy 97.5%, cost $0.0038
-  haiku alone: accuracy 100.0%, cost $0.1256
-  cost saving: 97%
-```
+Routing at threshold 0.80:
+
+- Handled locally by Von: 97%, rest to Haiku.
+- Routed: accuracy 97.5%, cost $0.0038.
+- Haiku alone: accuracy 100.0%, cost $0.1256.
+- Cost saving: 97%.
 
 ECE is expected calibration error: lower is better. Routing keeps Von's answer when its confidence is at least the threshold, otherwise uses Haiku's.
 
