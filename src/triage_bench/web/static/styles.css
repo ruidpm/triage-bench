@@ -47,7 +47,7 @@
   --ring-thickness: 9px;
   --chart-height: 240px;
   /* the ticket feed scrolls inside this height so the dashboard above stays in view */
-  --feed-max-height: 70vh;
+  --feed-max-height: min(70vh, 640px);
   --main-max: 1400px;
 }
 
@@ -740,7 +740,7 @@ main {
   :root {
     --gutter: 20px;
     --chart-height: 300px;
-    --feed-max-height: 60vh;
+    --feed-max-height: min(60vh, 560px);
   }
 
   .controls {

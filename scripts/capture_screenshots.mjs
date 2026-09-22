@@ -35,6 +35,8 @@ const RUN_TIMEOUT_MS = 180_000;
 const SETTLE_MS = 350;
 // Finished shots have no next tick to race, so they can wait longer for layout to settle.
 const FINISHED_SETTLE_MS = 1000;
+// Viewport resizes allowed while matching the page height (see growViewportToPage).
+const MAX_RESIZE_ATTEMPTS = 5;
 // Gap kept above the element a clipped shot stops at.
 const CLIP_GAP_PX = 4;
 
@@ -198,6 +200,26 @@ function setSlider(id, value) {
 const READ_TICK = `Number(document.getElementById("tick").textContent.split("/")[0])`;
 const READ_BUTTON = `document.getElementById("play").textContent`;
 
+const READ_PAGE_HEIGHT = `Math.ceil(document.documentElement.scrollHeight)`;
+
+// Grow the viewport to the whole page so the capture never triggers a late resize. The
+// ticket feed's max height depends on the viewport height (capped), so the page can grow
+// once more after the first resize: repeat until the height stops changing.
+async function growViewportToPage(page, shot) {
+  let viewportHeight = shot.height;
+  for (let attempt = 0; attempt < MAX_RESIZE_ATTEMPTS; attempt += 1) {
+    const pageHeight = await page.evaluate(READ_PAGE_HEIGHT);
+    if (pageHeight === viewportHeight) {
+      return;
+    }
+    viewportHeight = pageHeight;
+    await page.send("Emulation.setDeviceMetricsOverride", {
+      width: shot.width, height: pageHeight, deviceScaleFactor: shot.scale, mobile: shot.mobile,
+    });
+  }
+  throw new Error(`page height still changing after ${MAX_RESIZE_ATTEMPTS} resizes`);
+}
+
 async function capture(page, shot, url, outDir) {
   await page.send("Emulation.setDeviceMetricsOverride", {
     width: shot.width, height: shot.height, deviceScaleFactor: shot.scale, mobile: shot.mobile,
@@ -223,11 +245,7 @@ async function capture(page, shot, url, outDir) {
     await page.evaluate(setSlider("threshold", shot.threshold));
   }
 
-  // Grow the viewport to the whole page so the capture never triggers a late resize.
-  const pageHeight = Math.ceil(await page.evaluate(`document.documentElement.scrollHeight`));
-  await page.send("Emulation.setDeviceMetricsOverride", {
-    width: shot.width, height: pageHeight, deviceScaleFactor: shot.scale, mobile: shot.mobile,
-  });
+  await growViewportToPage(page, shot);
   if (midRun) {
     const before = await page.evaluate(READ_TICK);
     await waitFor(async () => (await page.evaluate(READ_TICK)) > before,
@@ -241,7 +259,7 @@ async function capture(page, shot, url, outDir) {
     ? Math.floor(await page.evaluate(
       `document.querySelector(${JSON.stringify(shot.stopAbove)}).getBoundingClientRect().top`,
     )) - CLIP_GAP_PX
-    : Math.ceil(await page.evaluate(`document.documentElement.scrollHeight`));
+    : await page.evaluate(READ_PAGE_HEIGHT);
   const { data } = await page.send("Page.captureScreenshot", {
     format: "png",
     clip: { x: 0, y: 0, width: shot.width, height, scale: 1 },
