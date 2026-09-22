@@ -156,7 +156,6 @@ const state = {
   maxSpeedTps: 0,
   // A run has started and has not finished or stopped (a paused replay is still running).
   running: false,
-  finished: false,
   chart: null,
   routingBroken: false,
 };
@@ -763,7 +762,6 @@ function handleMessage(message) {
 
 function finishRun() {
   closeStream();
-  state.finished = true;
   setButton(BUTTON_TEXT.finished, { disabled: true });
   const summary = state.lastTotals ? ` Accuracy: ${accuracySummary(state.lastTotals)}.` : "";
   announce(`Run finished after ${state.lastTick} tickets.${summary}`);
@@ -826,7 +824,6 @@ function startStream() {
   source.addEventListener("error", handleStreamError);
   state.source = source;
   state.running = true;
-  state.finished = false;
   if (state.mode === MODE_LIVE) {
     setButton(BUTTON_TEXT.running, { disabled: true, title: LIVE_RESTART_TITLE });
   } else {
