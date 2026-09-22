@@ -28,7 +28,8 @@
   </header>
 
   <main>
-    <section id="cards" class="cards" aria-live="polite" aria-label="Contestants"></section>
+    <p id="live-status" class="visually-hidden" role="status" aria-live="polite"></p>
+    <section id="cards" class="cards" aria-label="Contestants"></section>
 
     <section class="panel ticket">
       <h2>Current ticket</h2>
@@ -37,7 +38,7 @@
     </section>
 
     <section class="panel chart">
-      <h2>Latency per ticket <span class="muted">ms, log scale, last 50</span></h2>
+      <h2>Latency per ticket <span id="chart-caption" class="muted"></span></h2>
       <div class="chart-box">
         <canvas id="latency" role="img" aria-label="Latency per ticket, one line per contestant. The contestant cards list p50 latency."></canvas>
       </div>

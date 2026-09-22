@@ -21,6 +21,9 @@ const MAX_FEED_CHARS = 90;
 const ELLIPSIS = "…";
 const PLACEHOLDER = "–";
 const PERCENT = 100;
+const LOG_BASE = 10;
+// Screen-reader summary cadence: announce progress every N ticks, plus start, pause and finish.
+const ANNOUNCE_EVERY_TICKS = 25;
 const EXACT_DECIMALS = 100;
 
 const DIGITS = {
@@ -58,6 +61,7 @@ const MESSAGES = {
   badFrame: "stream sent a frame the dashboard could not read",
   metaFailed: "could not load run details from the server",
   chartMissing: "chart library failed to load; the latency chart is unavailable",
+  routingIncomplete: "a ticket is missing a Von or Haiku decision; routing panel stopped",
 };
 
 const CHART = {
@@ -95,6 +99,8 @@ const els = {
   latency: $("latency"),
   routing: $("routing"),
   routingText: $("routing-text"),
+  liveStatus: $("live-status"),
+  chartCaption: $("chart-caption"),
   rLocal: $("r-local"),
   rAcc: $("r-acc"),
   rCost: $("r-cost"),
@@ -112,10 +118,13 @@ const state = {
   cards: new Map(),
   history: [],
   lastTotal: 0,
+  lastTotals: null,
+  lastTick: 0,
   source: null,
   playing: false,
   finished: false,
   chart: null,
+  routingBroken: false,
 };
 
 /* ---------- formatting (mirrors Python's format spec) ---------- */
@@ -242,7 +251,6 @@ function resetCard(card) {
   card.glyph.textContent = "";
   card.label.textContent = PLACEHOLDER;
   card.conf.textContent = "";
-  card.conf.removeAttribute("title");
   card.ring.style.setProperty("--pct", "0");
   card.ring.setAttribute("aria-label", "accuracy not yet known");
   card.ringValue.textContent = PLACEHOLDER;
@@ -259,12 +267,10 @@ function renderVerdict(card, decision) {
   if (outcome === OUTCOMES.err) {
     card.label.textContent = outcome.word;
     card.conf.textContent = decision.error;
-    card.conf.title = decision.error;
     return;
   }
   card.label.textContent = decision.label;
   card.conf.textContent = formatPercent(decision.confidence, DIGITS.confidence);
-  card.conf.removeAttribute("title");
 }
 
 function renderTotals(card, key, totals) {
@@ -293,7 +299,7 @@ function chartColours() {
 }
 
 function isRoundLogTick(value) {
-  const mantissa = value / 10 ** Math.floor(Math.log10(value));
+  const mantissa = value / LOG_BASE ** Math.floor(Math.log10(value));
   return CHART.logTickMantissas.includes(Math.round(mantissa));
 }
 
@@ -462,11 +468,12 @@ function outcomeCell(key, decision) {
   glyph.textContent = outcome.glyph;
   const label = document.createElement("span");
   label.className = "outcome-label";
-  label.textContent = isErrorDecision(decision) ? outcome.word : decision.label;
+  // Errors show their message, so nothing is reachable only by hovering.
+  label.textContent = isErrorDecision(decision) ? decision.error : decision.label;
   inner.append(glyph, label);
   td.append(inner);
-  td.title = isErrorDecision(decision) ? decision.error : `${outcome.word}: ${decision.label}`;
-  td.setAttribute("aria-label", `${title}, ${td.title}`);
+  const spoken = isErrorDecision(decision) ? decision.error : decision.label;
+  td.setAttribute("aria-label", `${title}, ${outcome.word}: ${spoken}`);
   return td;
 }
 
@@ -540,6 +547,12 @@ function readThreshold() {
   return Number(els.threshold.value);
 }
 
+function clearRoutingValues() {
+  for (const dd of [els.rLocal, els.rAcc, els.rCost, els.rFallback, els.rSaving]) {
+    dd.textContent = PLACEHOLDER;
+  }
+}
+
 function renderRouting() {
   const threshold = readThreshold();
   const thresholdText = formatFixed(threshold, DIGITS.threshold);
@@ -552,10 +565,22 @@ function renderRouting() {
   const fallback = describe(ROUTING_FALLBACK).title;
   els.routingText.textContent =
     `${primary} answers when its confidence is at least ${thresholdText}, otherwise ${fallback} answers.`;
-  if (state.history.length === 0) {
-    for (const dd of [els.rLocal, els.rAcc, els.rCost, els.rFallback, els.rSaving]) {
-      dd.textContent = PLACEHOLDER;
-    }
+  if (state.history.length === 0 || state.routingBroken) {
+    clearRoutingValues();
+    return;
+  }
+  const incomplete = state.history.find(
+    (h) => !h.decisions[ROUTING_PRIMARY] || !h.decisions[ROUTING_FALLBACK],
+  );
+  if (incomplete) {
+    console.error("Routing needs both decisions for every ticket; stopping the routing panel.", {
+      ticketId: incomplete.ticket.id,
+      present: Object.keys(incomplete.decisions),
+      needed: [ROUTING_PRIMARY, ROUTING_FALLBACK],
+    });
+    state.routingBroken = true;
+    showBanner(MESSAGES.routingIncomplete);
+    clearRoutingValues();
     return;
   }
   const r = confidenceGatedReport(state.history, threshold);
@@ -578,6 +603,17 @@ function renderTicket(ticket) {
   els.ticketLabel.textContent = ticket.label;
 }
 
+function announce(message) {
+  els.liveStatus.textContent = message;
+}
+
+function accuracySummary(totals) {
+  return state.contestants
+    .filter((key) => totals[key])
+    .map((key) => `${describe(key).title} ${formatPercent(totals[key].accuracy, DIGITS.accuracy)}`)
+    .join(", ");
+}
+
 function onTick(event) {
   state.lastTotal = event.total;
   state.history.push({ ticket: event.ticket, decisions: event.decisions });
@@ -594,10 +630,18 @@ function onTick(event) {
   pushLatency(event.tick, event.decisions);
   prependFeedRow(event);
   renderRouting();
+  state.lastTotals = event.totals;
+  state.lastTick = event.tick;
+  if (event.tick % ANNOUNCE_EVERY_TICKS === 0) {
+    announce(`Ticket ${event.tick} of ${event.total}. Accuracy: ${accuracySummary(event.totals)}.`);
+  }
 }
 
 function resetDisplay() {
   state.history = [];
+  state.routingBroken = false;
+  state.lastTotals = null;
+  state.lastTick = 0;
   hideBanner();
   renderTickCounter(0, state.lastTotal);
   els.ticketText.textContent = "Waiting for the first ticket…";
@@ -648,6 +692,8 @@ function handleDone() {
   closeStream();
   state.finished = true;
   setButton(BUTTON_TEXT.finished, { disabled: true });
+  const summary = state.lastTotals ? ` Accuracy: ${accuracySummary(state.lastTotals)}.` : "";
+  announce(`Run finished after ${state.lastTick} tickets.${summary}`);
 }
 
 function handleStreamError(error) {
@@ -682,11 +728,13 @@ function startStream() {
   } else {
     setButton(BUTTON_TEXT.pause, { pressed: true });
   }
+  announce("Run started.");
 }
 
 function pauseStream() {
   closeStream();
   setButton(BUTTON_TEXT.start);
+  announce(`Paused at ticket ${state.lastTick} of ${state.lastTotal}.`);
 }
 
 function onPlayClick() {
@@ -729,6 +777,7 @@ function applyMeta(meta) {
   els.mode.textContent = meta.mode;
   els.runName.textContent = meta.run_name;
   els.speedWrap.hidden = meta.mode === MODE_LIVE;
+  els.chartCaption.textContent = `ms, log scale, last ${MAX_POINTS}`;
   buildCards();
   buildFeedHeads();
   buildChart();
