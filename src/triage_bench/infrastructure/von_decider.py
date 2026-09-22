@@ -44,15 +44,42 @@ class VonDecider:
                 state=ticket.text, choices=self._choices, instructions=INSTRUCTIONS
             )
         except Exception as exc:  # adapters must not raise; the runner needs every tick
-            return Decision(ticket.id, CONTESTANT, None, 0.0, 0.0, 0, 0, 0.0, error=str(exc))
+            return self._error_decision(ticket.id, str(exc))
         latency_ms = (time.perf_counter() - started) * MS_PER_SECOND
+        try:
+            confidence = result.probabilities[result.choice]
+            return Decision(
+                ticket_id=ticket.id,
+                contestant=CONTESTANT,
+                label=result.choice,
+                confidence=confidence,
+                latency_ms=latency_ms,
+                input_tokens=0,
+                output_tokens=0,
+                cost_usd=0.0,
+            )
+        except KeyError:
+            return self._error_decision(
+                ticket.id,
+                f"von choice {result.choice!r} missing from probabilities "
+                f"{result.probabilities!r}",
+            )
+        except ValueError as exc:
+            return self._error_decision(
+                ticket.id,
+                f"von confidence for choice {result.choice!r} rejected: {exc}",
+            )
+
+    @staticmethod
+    def _error_decision(ticket_id: int, message: str) -> Decision:
         return Decision(
-            ticket_id=ticket.id,
+            ticket_id=ticket_id,
             contestant=CONTESTANT,
-            label=result.choice,
-            confidence=result.probabilities[result.choice],
-            latency_ms=latency_ms,
+            label=None,
+            confidence=0.0,
+            latency_ms=0.0,
             input_tokens=0,
             output_tokens=0,
             cost_usd=0.0,
+            error=message,
         )

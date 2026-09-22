@@ -38,3 +38,16 @@ def test_engine_exception_becomes_error_decision() -> None:
     d = VonDecider(FakeEngine(RuntimeError("mps out of memory"))).decide(TICKET)
     assert d.is_error and "mps out of memory" in (d.error or "")
     assert d.label is None and d.latency_ms == 0.0
+
+
+def test_missing_choice_in_probabilities_becomes_error_decision() -> None:
+    engine = FakeEngine(FakeResult("card_arrival", {"exchange_rate": 1.0}))
+    d = VonDecider(engine).decide(TICKET)
+    assert d.is_error and d.label is None and d.latency_ms == 0.0
+    assert "card_arrival" in (d.error or "")
+
+
+def test_confidence_slightly_above_one_becomes_error_decision() -> None:
+    engine = FakeEngine(FakeResult("card_arrival", {"card_arrival": 1.0000000002}))
+    d = VonDecider(engine).decide(TICKET)
+    assert d.is_error and d.label is None and d.latency_ms == 0.0
