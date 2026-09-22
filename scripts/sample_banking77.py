@@ -11,9 +11,15 @@ Python loading script, which `datasets>=4` refuses to execute (and the repo
 has no `refs/convert/parquet` fallback branch either). So this script fetches
 PolyAI's canonical CSV directly from GitHub, pinned to the one commit that
 has ever touched it, instead of depending on the `datasets` package.
+
+PolyAI's test.csv is grouped by category, so writing rows in id order would
+replay 25 identical intents in a row on the live dashboard. Rows are written
+in a deterministic seeded shuffle instead (ids themselves stay the original
+0-based row index from the source file).
 """
 
 import csv
+import io
 import random
 import urllib.request
 from pathlib import Path
@@ -32,10 +38,10 @@ OUT = Path("data/tickets.csv")
 
 
 def main() -> None:
-    with urllib.request.urlopen(TEST_CSV_URL) as response:  # noqa: S310
+    with urllib.request.urlopen(TEST_CSV_URL) as response:
         text = response.read().decode("utf-8")
 
-    reader = csv.reader(text.splitlines())
+    reader = csv.reader(io.StringIO(text))
     header = next(reader)
     if header != ["text", "category"]:
         raise SystemExit(f"unexpected header {header}, expected ['text', 'category']")
@@ -55,7 +61,11 @@ def main() -> None:
             raise SystemExit(f"{label}: only {len(candidates)} candidates, need {PER_LABEL}")
         for index, sampled_text in rng.sample(candidates, PER_LABEL):
             chosen.append((index, sampled_text, label))
-    chosen.sort()
+    # Source rows are grouped by category; shuffle with the same seeded RNG
+    # (continuing its state after sampling) so the written order is mixed
+    # but still fully reproducible from SEED alone. Ids remain the original
+    # 0-based row index from the source file.
+    rng.shuffle(chosen)
 
     OUT.parent.mkdir(exist_ok=True)
     with OUT.open("w", newline="", encoding="utf-8") as handle:

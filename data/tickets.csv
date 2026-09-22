@@ -1,201 +1,201 @@
 id,text,label
-0,How do I locate my card?,card_arrival
-2,I ordered a card but it has not arrived. Help please!,card_arrival
-3,Is there a way to know when my card will arrive?,card_arrival
-5,When will I get my card?,card_arrival
-6,Do you know if there is a tracking number for the new card you sent me?,card_arrival
-7,i have not received my card,card_arrival
-8,still waiting on that card,card_arrival
-9,Is it normal to have to wait over a week for my new card?,card_arrival
-10,How do I track my card?,card_arrival
-11,How long does a card delivery take?,card_arrival
-13,still waiting on my new card,card_arrival
-15,"I have been waiting longer than expected for my bank card, could you provide information on when it will arrive?",card_arrival
-16,I've been waiting longer than expected for my card.,card_arrival
-18,Where is my new card? I have been waiting a week!,card_arrival
-19,My card still hasn't arrived after 2 weeks. Is it lost?,card_arrival
-20,"I did not get my card yet, is it lost?",card_arrival
-24,"My card has not arrived yet, where is it?",card_arrival
-25,What is the tracking number for my card that was mailed?,card_arrival
-26,I think something went wrong with my card delivery as I haven't received it yet.,card_arrival
-27,"I'm still waiting for delivery of my new card, why is it taking so long?",card_arrival
-28,"I ordered a card a week ago, and it's still not here. What do I do?",card_arrival
-32,How do I know when my card will arrive?,card_arrival
-34,Does the card you sent have a way to track to it?,card_arrival
-36,"I'm starting to think my card is lost because it still hasn't arrived, can you help?",card_arrival
-38,What is the tracking number for the card you sent?,card_arrival
-81,What exchange rates do you offer?,exchange_rate
-82,How did you come up with your exchange rates?,exchange_rate
-83,Where do you guys acquire your exchange rate?,exchange_rate
-84,How do I find the exchange rate?,exchange_rate
-86,How often do your exchange rates change,exchange_rate
-88,How are exchange rates calculated?,exchange_rate
-90,what are exchange rates,exchange_rate
-91,What are the most current exchange rates?,exchange_rate
-93,Is it a good time to exchange?,exchange_rate
-97,Will I get a curreng foreign exchange rate?,exchange_rate
-98,What currencies is an exchange rate calculated in?,exchange_rate
-101,What exchange rate do you use?,exchange_rate
-102,The exchange rates are?,exchange_rate
-103,What do you base your exchange rates on?,exchange_rate
-104,What foreign exchange rate will you use?,exchange_rate
-106,The exchange rate would be?,exchange_rate
-108,How do your exchange rates work?,exchange_rate
-109,what is the exchange rate?,exchange_rate
-110,Where did your guys exchange rates come from?,exchange_rate
-111,How are you determining your exchange rates?,exchange_rate
-112,I'm trying to figure out the current exchange rate.,exchange_rate
-113,From where are you getting your exchange rates?,exchange_rate
-114,Can you tell me the foreign exchange rate?,exchange_rate
-117,What is my foreign exchange rate?,exchange_rate
-118,when does the rate get determined,exchange_rate
-440,"My entire gym bag, including my wallet, was stolen out of my locker today. Everything in my wallet is gone - how do I block the card to make it can't be used?",lost_or_stolen_card
-441,I can't find my card and think it may have been stolen.,lost_or_stolen_card
-442,"Someone stole my card. I need to report it stolen. I made a police report already, but how do I report it with you?",lost_or_stolen_card
-443,"I cant find my card, it's gone.",lost_or_stolen_card
-444,My card is lost! What can I do?,lost_or_stolen_card
-446,Oh no!  I lost my card!  Help!,lost_or_stolen_card
-453,Is a copy of the police report necessary for completing the report process?,lost_or_stolen_card
-454,I lost my wallet today with all my credit cards. Will you please block the card and send a replacement?,lost_or_stolen_card
-456,Can you freeze my card it was stolen,lost_or_stolen_card
-457,Help!  I can't find my card.,lost_or_stolen_card
-459,I need help with a lost card,lost_or_stolen_card
-461,"Someone stole my wallet earlier today, not sure exactly when, probably on Piccadilly circus. Can you check if there were any attempts to use the card and obviously block it?",lost_or_stolen_card
-462,I think I lost my card . I dont know how long it has been missing. Can you see if maybe someone else has been using it?,lost_or_stolen_card
-463,How can I freeze a stolen card?,lost_or_stolen_card
-465,My bags were stolen. I need a new card but need to cancel the stolen one.,lost_or_stolen_card
-467,My card was taken from me,lost_or_stolen_card
-468,My card got lost.,lost_or_stolen_card
-470,How do I report my card lost or stolen?,lost_or_stolen_card
-471,My card is lost! What do I do now?,lost_or_stolen_card
-472,I'm in Spain and my stuff has been stolen. My card was with it and I need a new one shipped and the old one frozen.,lost_or_stolen_card
-473,I believe my credit card was stolen.,lost_or_stolen_card
-474,How do I report a stolen card?,lost_or_stolen_card
-477,Are you able to locate my card?,lost_or_stolen_card
-478,My card got stolen!,lost_or_stolen_card
-479,Help me please!  My card was stolen!,lost_or_stolen_card
-1520,What do I do if I forget my passcode?  Because I did.,passcode_forgotten
-1521,I can't find my password,passcode_forgotten
-1523,My passcode doesn't seem to be working,passcode_forgotten
-1525,My password isn't being accepted and I need to reset it.,passcode_forgotten
-1526,Something is wrong with my password.,passcode_forgotten
-1527,Something is wrong with my passcode,passcode_forgotten
-1530,Can I be given a new passcode?,passcode_forgotten
-1532,I don't remember my code to get into the app.,passcode_forgotten
-1535,Can I resent my passcode?,passcode_forgotten
-1537,Show me please how to reset my passcode.,passcode_forgotten
-1538,Help me reset the passcode.,passcode_forgotten
-1542,Where can I reset the passcode?,passcode_forgotten
-1544,What steps do I take to receive another passcode?,passcode_forgotten
-1545,I forgot my password,passcode_forgotten
-1546,I forgot my code to get into the app.,passcode_forgotten
-1547,I have forgotten my password.,passcode_forgotten
-1548,I forgot the code to access the app.,passcode_forgotten
-1549,Is there a way to reset my passcode?,passcode_forgotten
-1551,Can I reset my password?  I don't know what it is.,passcode_forgotten
-1552,How do I reset the passcode?,passcode_forgotten
-1553,What should I do if I forgot my passcode?,passcode_forgotten
-1554,My passcode doesn't work,passcode_forgotten
-1555,Tell me how to reset the passcode.,passcode_forgotten
-1557,I don't have my access code for the app.,passcode_forgotten
-1559,What is the code I need to get into the app?,passcode_forgotten
-1760,The refund isn't showing up on my account.,refund_not_showing_up
-1762,"I requested a refund, and never received it. What can I do?",refund_not_showing_up
-1763,I was supposed to get a purchase refunded but I don't see the money in my account,refund_not_showing_up
-1764,There's a refund missing from my statement,refund_not_showing_up
-1765,"I need help. I asked for a refund from a merchant a while ago, but I have not gotten my money back. I keep checking my account, but nothing is showing up. What should I do now?",refund_not_showing_up
-1766,I am awaiting my refund,refund_not_showing_up
-1767,How long does it take for a refund?,refund_not_showing_up
-1768,"Help! I keep checking my account, but my refund is not showing. I requested that a seller refund my money a while back, but there is no money showing in my account. What can you do for me?",refund_not_showing_up
-1771,Why is my refund missing from my  statement?,refund_not_showing_up
-1773,I requested a refund and it is missing.,refund_not_showing_up
-1776,Do you have any idea on when I will receive my refund? I got my statement and it was not there.,refund_not_showing_up
-1778,Where can I see the refund in my account,refund_not_showing_up
-1779,"i was supposed to get a refund but my balance hasn't changed, why not?",refund_not_showing_up
-1781,The refund has not appeared in my account,refund_not_showing_up
-1783,My statement doesn't show that a refund has processed,refund_not_showing_up
-1784,I requested a refund from a store but it hasn't arrived.,refund_not_showing_up
-1787,My refund doesn't seem to be showing on my statement.,refund_not_showing_up
-1788,I am not seeing a refund in my statement.,refund_not_showing_up
-1789,Why can't I see a recent refund in my statement?,refund_not_showing_up
-1790,"I did what you told me earlier and contacted the seller for a refund directly, but nothing is happening! It's been a week and I still haven't got anything. Please just give me back my money",refund_not_showing_up
-1792,It's been a week and I have done everything that I was asked to do and still nothing. I have contacted the seller and have not gotten a response. Please understand my frustration and put the money back in my account.,refund_not_showing_up
-1793,My refund is missing,refund_not_showing_up
 1795,I keep checking my bank statements but I don't see a refund that I've requested from a seller. Can you ensure that I receive the refund from the seller?,refund_not_showing_up
-1796,"I am waiting patiently for a week now for the seller to get back to me and there has been no response, could you please help me further with getting my money back.  Thank you.",refund_not_showing_up
-1798,How long will it take to get my refund,refund_not_showing_up
-1800,My credit card was declined.,declined_card_payment
-1801,The new card that was just sent to me was declined multiple times yesterday when I tried to use it at a restaurant to pay for my dinner.  I am really disappointed  and embarrassed that my card was denied when I tried to use it to pay for my friend's birthday dinner.,declined_card_payment
-1802,Why was my card payment declined?,declined_card_payment
-1803,I was trying to purchase something at the store today and my card has been declined.  Why has this happened?,declined_card_payment
-1806,Why did it decline my payment?,declined_card_payment
-1808,Can you look at my account ans see why my card was declined,declined_card_payment
-1809,"I was out today looking forward to pay with my new card, turns out the payment just kept getting declined. This is really sad, what's going on?",declined_card_payment
-1811,My new card keeps getting declined. I was very excited to use it for the first time today. Why is this doing this?,declined_card_payment
-1815,I'm really stuck. I don't know why but my card payment has not gone through.,declined_card_payment
-1817,Do you know why my card payment did not work?,declined_card_payment
-1818,Something is wrong with my payment account since it has been declined,declined_card_payment
-1819,Why are you declining my payment? Everything was fine.,declined_card_payment
-1820,I don't know why my payment didn't work.,declined_card_payment
-1822,Why is my debit card being declined when I have money?,declined_card_payment
-1823,My card was not accepted.,declined_card_payment
-1826,"My card was rejected at the store for some reason, can you look into this for me?",declined_card_payment
-1829,Do you know why my card payment is declined?,declined_card_payment
-1830,Why was my Payment declined,declined_card_payment
-1832,Why has my card payment been declined?,declined_card_payment
-1833,"I finally got my new card and was very excited to use it today. However, my payment kept declining. What is happening?",declined_card_payment
 1834,My card payment did not complete.,declined_card_payment
-1835,My card didn't work in one of the shops.,declined_card_payment
-1837,"I tried using my card and it kept getting declined, Why?",declined_card_payment
-1838,How do you fix  my card payment?,declined_card_payment
-1839,Why do you keep declining my payment? I tried several times already with this card and it's just not working,declined_card_payment
-1884,What steps do I need to take to close my account?,terminate_account
-1885,I'm tired of all the problems I've had. I want to quit this account!,terminate_account
-1887,I want to close my account,terminate_account
-1888,"unhappy with you, how to delete account",terminate_account
-1889,I would like to delete my account.,terminate_account
+11,How long does a card delivery take?,card_arrival
+108,How do your exchange rates work?,exchange_rate
+25,What is the tracking number for my card that was mailed?,card_arrival
+1545,I forgot my password,passcode_forgotten
+2660,The app denied my top-up,top_up_failed
+440,"My entire gym bag, including my wallet, was stolen out of my locker today. Everything in my wallet is gone - how do I block the card to make it can't be used?",lost_or_stolen_card
+2679,Can you tell me why my top up didn't work?,top_up_failed
+479,Help me please!  My card was stolen!,lost_or_stolen_card
+110,Where did your guys exchange rates come from?,exchange_rate
+1553,What should I do if I forgot my passcode?,passcode_forgotten
+468,My card got lost.,lost_or_stolen_card
 1894,"This company is bad, please delete my account.",terminate_account
-1895,"please delete my account, your services are not up to par.",terminate_account
-1896,I need your help in deleting my account.,terminate_account
-1897,"The service of this company sucks, I need to terminate my account.",terminate_account
-1898,Delete this account!,terminate_account
-1900,"This company isn't good, I would like to delete my account.",terminate_account
-1903,Please delete my account. I am not happy with the service from your company.,terminate_account
-1904,Please terminate my account.,terminate_account
-1905,I am sick of this damn company and want to close out my account.,terminate_account
-1906,Please close my account. I am unsatisfied with your service.,terminate_account
-1907,Please delete my account.,terminate_account
-1908,"Your service is terrible,.  Delete my account,",terminate_account
+1552,How do I reset the passcode?,passcode_forgotten
 1909,I want my account deleted!,terminate_account
-1911,How do I delete my account?,terminate_account
-1912,This company sucks! Can you delete my account?,terminate_account
-1914,Can you help me get rid of my account?,terminate_account
-1916,"Please delete my account, this company is not working for me!",terminate_account
-1917,I want to delete my account. I'm unhappy with the service you're providing.,terminate_account
+1784,I requested a refund from a store but it hasn't arrived.,refund_not_showing_up
+0,How do I locate my card?,card_arrival
+86,How often do your exchange rates change,exchange_rate
 1918,Can you tell me how to close my account?,terminate_account
-1919,This company sucks! Can you terminate my account?,terminate_account
-2641,"Heyy I tried to top up with my card today but it failed! I just got the couple days before but it has worked last time. What's going on, can you double check please?",top_up_failed
-2643,"So, I tried topping up my card for the today. Unfortunately, it failed. A couple of days back I used it and it works fine. Can you double check and tell me what's going on?",top_up_failed
-2644,Why did the app deny my top up?,top_up_failed
-2645,please tell me why my top-up failed.,top_up_failed
-2646,My top-up isn't working.,top_up_failed
+6,Do you know if there is a tracking number for the new card you sent me?,card_arrival
+1798,How long will it take to get my refund,refund_not_showing_up
+1907,Please delete my account.,terminate_account
+1801,The new card that was just sent to me was declined multiple times yesterday when I tried to use it at a restaurant to pay for my dinner.  I am really disappointed  and embarrassed that my card was denied when I tried to use it to pay for my friend's birthday dinner.,declined_card_payment
+470,How do I report my card lost or stolen?,lost_or_stolen_card
+1760,The refund isn't showing up on my account.,refund_not_showing_up
+34,Does the card you sent have a way to track to it?,card_arrival
+1904,Please terminate my account.,terminate_account
+2664,can you check why I wasn't able to top up?,top_up_failed
+5,When will I get my card?,card_arrival
+118,when does the rate get determined,exchange_rate
+478,My card got stolen!,lost_or_stolen_card
+1887,I want to close my account,terminate_account
+1817,Do you know why my card payment did not work?,declined_card_payment
+7,i have not received my card,card_arrival
+1792,It's been a week and I have done everything that I was asked to do and still nothing. I have contacted the seller and have not gotten a response. Please understand my frustration and put the money back in my account.,refund_not_showing_up
+453,Is a copy of the police report necessary for completing the report process?,lost_or_stolen_card
+9,Is it normal to have to wait over a week for my new card?,card_arrival
+1530,Can I be given a new passcode?,passcode_forgotten
+1788,I am not seeing a refund in my statement.,refund_not_showing_up
 2648,What reason did my top-up fail for?,top_up_failed
+446,Oh no!  I lost my card!  Help!,lost_or_stolen_card
+28,"I ordered a card a week ago, and it's still not here. What do I do?",card_arrival
+1830,Why was my Payment declined,declined_card_payment
+457,Help!  I can't find my card.,lost_or_stolen_card
+477,Are you able to locate my card?,lost_or_stolen_card
+38,What is the tracking number for the card you sent?,card_arrival
+24,"My card has not arrived yet, where is it?",card_arrival
+1903,Please delete my account. I am not happy with the service from your company.,terminate_account
+1554,My passcode doesn't work,passcode_forgotten
+1547,I have forgotten my password.,passcode_forgotten
+1800,My credit card was declined.,declined_card_payment
+459,I need help with a lost card,lost_or_stolen_card
+97,Will I get a curreng foreign exchange rate?,exchange_rate
+2657,My funding to my card didn't go through.,top_up_failed
+1535,Can I resent my passcode?,passcode_forgotten
+93,Is it a good time to exchange?,exchange_rate
+1884,What steps do I need to take to close my account?,terminate_account
+462,I think I lost my card . I dont know how long it has been missing. Can you see if maybe someone else has been using it?,lost_or_stolen_card
+1546,I forgot my code to get into the app.,passcode_forgotten
+111,How are you determining your exchange rates?,exchange_rate
+2653,Why would my topup not go through?,top_up_failed
+1527,Something is wrong with my passcode,passcode_forgotten
+1912,This company sucks! Can you delete my account?,terminate_account
+2658,I need to know why my credit card was declined for top up? What is the deal here and why did it not go through?,top_up_failed
+32,How do I know when my card will arrive?,card_arrival
+456,Can you freeze my card it was stolen,lost_or_stolen_card
+474,How do I report a stolen card?,lost_or_stolen_card
+1820,I don't know why my payment didn't work.,declined_card_payment
+8,still waiting on that card,card_arrival
+1833,"I finally got my new card and was very excited to use it today. However, my payment kept declining. What is happening?",declined_card_payment
+1811,My new card keeps getting declined. I was very excited to use it for the first time today. Why is this doing this?,declined_card_payment
+454,I lost my wallet today with all my credit cards. Will you please block the card and send a replacement?,lost_or_stolen_card
+1914,Can you help me get rid of my account?,terminate_account
+467,My card was taken from me,lost_or_stolen_card
+36,"I'm starting to think my card is lost because it still hasn't arrived, can you help?",card_arrival
+90,what are exchange rates,exchange_rate
+104,What foreign exchange rate will you use?,exchange_rate
+112,I'm trying to figure out the current exchange rate.,exchange_rate
+463,How can I freeze a stolen card?,lost_or_stolen_card
+16,I've been waiting longer than expected for my card.,card_arrival
+1538,Help me reset the passcode.,passcode_forgotten
+1796,"I am waiting patiently for a week now for the seller to get back to me and there has been no response, could you please help me further with getting my money back.  Thank you.",refund_not_showing_up
+2667,I tried to top up. Why was it denied?,top_up_failed
+1781,The refund has not appeared in my account,refund_not_showing_up
+2676,How do I know if my top up was unsuccessful?,top_up_failed
+1889,I would like to delete my account.,terminate_account
+461,"Someone stole my wallet earlier today, not sure exactly when, probably on Piccadilly circus. Can you check if there were any attempts to use the card and obviously block it?",lost_or_stolen_card
+1802,Why was my card payment declined?,declined_card_payment
 2649,Why didn`t my topup go through?,top_up_failed
 2650,How can I check to see if my top-up worked?,top_up_failed
-2651,My top up didn't work.,top_up_failed
-2652,My top up failed.,top_up_failed
-2653,Why would my topup not go through?,top_up_failed
-2654,Why caused my top up to not work?,top_up_failed
-2656,Why was my top-up unsuccessful?,top_up_failed
-2657,My funding to my card didn't go through.,top_up_failed
-2658,I need to know why my credit card was declined for top up? What is the deal here and why did it not go through?,top_up_failed
-2660,The app denied my top-up,top_up_failed
-2664,can you check why I wasn't able to top up?,top_up_failed
-2666,"My top-up failed, WHY?",top_up_failed
-2667,I tried to top up. Why was it denied?,top_up_failed
+113,From where are you getting your exchange rates?,exchange_rate
+1548,I forgot the code to access the app.,passcode_forgotten
+1917,I want to delete my account. I'm unhappy with the service you're providing.,terminate_account
+1832,Why has my card payment been declined?,declined_card_payment
+443,"I cant find my card, it's gone.",lost_or_stolen_card
+1808,Can you look at my account ans see why my card was declined,declined_card_payment
+3,Is there a way to know when my card will arrive?,card_arrival
+117,What is my foreign exchange rate?,exchange_rate
+103,What do you base your exchange rates on?,exchange_rate
+1803,I was trying to purchase something at the store today and my card has been declined.  Why has this happened?,declined_card_payment
+1809,"I was out today looking forward to pay with my new card, turns out the payment just kept getting declined. This is really sad, what's going on?",declined_card_payment
 2668,What's the deal? My card was just denied for top up. Why is it not going through?,top_up_failed
 2672,Why can't I top up?,top_up_failed
-2674,Problems with top up,top_up_failed
-2676,How do I know if my top up was unsuccessful?,top_up_failed
+1790,"I did what you told me earlier and contacted the seller for a refund directly, but nothing is happening! It's been a week and I still haven't got anything. Please just give me back my money",refund_not_showing_up
+1787,My refund doesn't seem to be showing on my statement.,refund_not_showing_up
+1916,"Please delete my account, this company is not working for me!",terminate_account
+1829,Do you know why my card payment is declined?,declined_card_payment
+98,What currencies is an exchange rate calculated in?,exchange_rate
+10,How do I track my card?,card_arrival
+1773,I requested a refund and it is missing.,refund_not_showing_up
+83,Where do you guys acquire your exchange rate?,exchange_rate
+1839,Why do you keep declining my payment? I tried several times already with this card and it's just not working,declined_card_payment
+441,I can't find my card and think it may have been stolen.,lost_or_stolen_card
+1897,"The service of this company sucks, I need to terminate my account.",terminate_account
+106,The exchange rate would be?,exchange_rate
+1908,"Your service is terrible,.  Delete my account,",terminate_account
+2643,"So, I tried topping up my card for the today. Unfortunately, it failed. A couple of days back I used it and it works fine. Can you double check and tell me what's going on?",top_up_failed
+26,I think something went wrong with my card delivery as I haven't received it yet.,card_arrival
+1789,Why can't I see a recent refund in my statement?,refund_not_showing_up
+444,My card is lost! What can I do?,lost_or_stolen_card
+2,I ordered a card but it has not arrived. Help please!,card_arrival
+471,My card is lost! What do I do now?,lost_or_stolen_card
+2666,"My top-up failed, WHY?",top_up_failed
+1896,I need your help in deleting my account.,terminate_account
+1905,I am sick of this damn company and want to close out my account.,terminate_account
+465,My bags were stolen. I need a new card but need to cancel the stolen one.,lost_or_stolen_card
+1542,Where can I reset the passcode?,passcode_forgotten
+1766,I am awaiting my refund,refund_not_showing_up
+81,What exchange rates do you offer?,exchange_rate
+18,Where is my new card? I have been waiting a week!,card_arrival
+442,"Someone stole my card. I need to report it stolen. I made a police report already, but how do I report it with you?",lost_or_stolen_card
+1826,"My card was rejected at the store for some reason, can you look into this for me?",declined_card_payment
+1783,My statement doesn't show that a refund has processed,refund_not_showing_up
+1551,Can I reset my password?  I don't know what it is.,passcode_forgotten
+1767,How long does it take for a refund?,refund_not_showing_up
+1819,Why are you declining my payment? Everything was fine.,declined_card_payment
+1763,I was supposed to get a purchase refunded but I don't see the money in my account,refund_not_showing_up
+1911,How do I delete my account?,terminate_account
+1765,"I need help. I asked for a refund from a merchant a while ago, but I have not gotten my money back. I keep checking my account, but nothing is showing up. What should I do now?",refund_not_showing_up
+91,What are the most current exchange rates?,exchange_rate
+473,I believe my credit card was stolen.,lost_or_stolen_card
+1919,This company sucks! Can you terminate my account?,terminate_account
+19,My card still hasn't arrived after 2 weeks. Is it lost?,card_arrival
+114,Can you tell me the foreign exchange rate?,exchange_rate
+1525,My password isn't being accepted and I need to reset it.,passcode_forgotten
+1555,Tell me how to reset the passcode.,passcode_forgotten
+1835,My card didn't work in one of the shops.,declined_card_payment
+1521,I can't find my password,passcode_forgotten
+2654,Why caused my top up to not work?,top_up_failed
+1806,Why did it decline my payment?,declined_card_payment
+2651,My top up didn't work.,top_up_failed
+1557,I don't have my access code for the app.,passcode_forgotten
+1906,Please close my account. I am unsatisfied with your service.,terminate_account
+101,What exchange rate do you use?,exchange_rate
+472,I'm in Spain and my stuff has been stolen. My card was with it and I need a new one shipped and the old one frozen.,lost_or_stolen_card
+82,How did you come up with your exchange rates?,exchange_rate
+1823,My card was not accepted.,declined_card_payment
+2641,"Heyy I tried to top up with my card today but it failed! I just got the couple days before but it has worked last time. What's going on, can you double check please?",top_up_failed
+20,"I did not get my card yet, is it lost?",card_arrival
+84,How do I find the exchange rate?,exchange_rate
+27,"I'm still waiting for delivery of my new card, why is it taking so long?",card_arrival
+2644,Why did the app deny my top up?,top_up_failed
 2677,I'm pretty sure my top up failed. How do I fix this?,top_up_failed
-2679,Can you tell me why my top up didn't work?,top_up_failed
+2652,My top up failed.,top_up_failed
+1776,Do you have any idea on when I will receive my refund? I got my statement and it was not there.,refund_not_showing_up
+1762,"I requested a refund, and never received it. What can I do?",refund_not_showing_up
+1822,Why is my debit card being declined when I have money?,declined_card_payment
+1895,"please delete my account, your services are not up to par.",terminate_account
+1900,"This company isn't good, I would like to delete my account.",terminate_account
+1768,"Help! I keep checking my account, but my refund is not showing. I requested that a seller refund my money a while back, but there is no money showing in my account. What can you do for me?",refund_not_showing_up
+1771,Why is my refund missing from my  statement?,refund_not_showing_up
+1526,Something is wrong with my password.,passcode_forgotten
+1837,"I tried using my card and it kept getting declined, Why?",declined_card_payment
+2646,My top-up isn't working.,top_up_failed
+1885,I'm tired of all the problems I've had. I want to quit this account!,terminate_account
+1537,Show me please how to reset my passcode.,passcode_forgotten
+1559,What is the code I need to get into the app?,passcode_forgotten
+1532,I don't remember my code to get into the app.,passcode_forgotten
+1764,There's a refund missing from my statement,refund_not_showing_up
+1888,"unhappy with you, how to delete account",terminate_account
+1523,My passcode doesn't seem to be working,passcode_forgotten
+109,what is the exchange rate?,exchange_rate
+1549,Is there a way to reset my passcode?,passcode_forgotten
+1815,I'm really stuck. I don't know why but my card payment has not gone through.,declined_card_payment
+2656,Why was my top-up unsuccessful?,top_up_failed
+1520,What do I do if I forget my passcode?  Because I did.,passcode_forgotten
+1818,Something is wrong with my payment account since it has been declined,declined_card_payment
+2674,Problems with top up,top_up_failed
+1838,How do you fix  my card payment?,declined_card_payment
+1778,Where can I see the refund in my account,refund_not_showing_up
+1898,Delete this account!,terminate_account
+1793,My refund is missing,refund_not_showing_up
+1779,"i was supposed to get a refund but my balance hasn't changed, why not?",refund_not_showing_up
+15,"I have been waiting longer than expected for my bank card, could you provide information on when it will arrive?",card_arrival
+102,The exchange rates are?,exchange_rate
+13,still waiting on my new card,card_arrival
+1544,What steps do I take to receive another passcode?,passcode_forgotten
+88,How are exchange rates calculated?,exchange_rate
+2645,please tell me why my top-up failed.,top_up_failed
