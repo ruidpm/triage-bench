@@ -8,12 +8,17 @@
  * mirrors domain/routing.py confidence_gated_report so the threshold slider can
  * be explored without a round trip. All stream text reaches the DOM through
  * textContent, never innerHTML.
+ *
+ * Replay pacing happens here, not on the server: the stream is opened at the server's
+ * maximum speed (max_speed_tps from /api/meta), frames wait in a queue, and a timer renders
+ * them at the speed slider's current rate, so the slider changes the pace mid-run.
  */
 
 const API_META = "/api/meta";
 const API_STREAM = "/api/stream";
 const DONE_EVENT = "done";
 const MODE_LIVE = "live";
+const MS_PER_SECOND = 1000;
 
 const MAX_POINTS = 50;
 const MAX_FEED_ROWS = 12;
@@ -137,6 +142,13 @@ const state = {
   lastTick: 0,
   source: null,
   streamOpened: false,
+  maxSpeedTps: 0,
+  // Replay pacing: frames received but not yet rendered, the pending render timer, when the
+  // last frame was rendered (performance.now() ms), and whether the server sent `done`.
+  queue: [],
+  pacer: null,
+  lastRenderAt: -Infinity,
+  streamDone: false,
   playing: false,
   finished: false,
   chart: null,
@@ -684,14 +696,71 @@ function setButton(text, { pressed = false, disabled = false, title = "" } = {})
   }
 }
 
-function closeStream() {
+function closeSource() {
   if (state.source) {
     state.source.close();
     state.source = null;
   }
-  state.playing = false;
-  els.speed.disabled = false;
 }
+
+function clearPacer() {
+  clearTimeout(state.pacer);
+  state.pacer = null;
+  state.queue = [];
+  state.streamDone = false;
+}
+
+function closeStream() {
+  closeSource();
+  clearPacer();
+  state.playing = false;
+}
+
+/* ---------- replay pacing ---------- */
+
+function tickIntervalMs() {
+  return MS_PER_SECOND / Number(els.speed.value);
+}
+
+function schedulePacer() {
+  clearTimeout(state.pacer);
+  const wait = Math.max(0, state.lastRenderAt + tickIntervalMs() - performance.now());
+  state.pacer = setTimeout(pacerStep, wait);
+}
+
+function pacerStep() {
+  state.pacer = null;
+  const event = state.queue.shift();
+  if (event) {
+    onTick(event);
+    state.lastRenderAt = performance.now();
+  }
+  if (state.queue.length > 0) {
+    schedulePacer();
+  } else if (state.streamDone) {
+    finishRun();
+  }
+}
+
+function enqueueTick(event) {
+  if (state.mode === MODE_LIVE) {
+    onTick(event);
+    return;
+  }
+  state.queue.push(event);
+  if (state.pacer === null) {
+    schedulePacer();
+  }
+}
+
+/** The slider moved: re-time the pending render from the last one at the new rate. */
+function repacePendingTick() {
+  if (state.pacer !== null) {
+    schedulePacer();
+  }
+}
+
+/* ---------- stream events ---------- */
 
 function handleMessage(message) {
   let event;
@@ -702,15 +771,25 @@ function handleMessage(message) {
     stopWithBanner(MESSAGES.badFrame);
     return;
   }
-  onTick(event);
+  enqueueTick(event);
 }
 
-function handleDone() {
+function finishRun() {
   closeStream();
   state.finished = true;
   setButton(BUTTON_TEXT.finished, { disabled: true });
   const summary = state.lastTotals ? ` Accuracy: ${accuracySummary(state.lastTotals)}.` : "";
   announce(`Run finished after ${state.lastTick} tickets.${summary}`);
+}
+
+function handleDone() {
+  // Close now so EventSource does not reconnect when the server ends the response; a replay
+  // finishes once the pacer has rendered every queued frame.
+  closeSource();
+  state.streamDone = true;
+  if (state.mode === MODE_LIVE || (state.queue.length === 0 && state.pacer === null)) {
+    finishRun();
+  }
 }
 
 function handleStreamOpen() {
@@ -736,10 +815,21 @@ function stopWithBanner(message) {
   }
 }
 
+/* ---------- start / stop ---------- */
+
+function streamUrl() {
+  // Live runs are never paced; replays arrive as fast as the server allows and the pacer
+  // renders them at the slider's rate.
+  if (state.mode === MODE_LIVE) {
+    return API_STREAM;
+  }
+  return `${API_STREAM}?speed=${encodeURIComponent(state.maxSpeedTps)}`;
+}
+
 function startStream() {
   resetDisplay();
-  const speed = Number(els.speed.value);
-  const source = new EventSource(`${API_STREAM}?speed=${encodeURIComponent(speed)}`);
+  state.lastRenderAt = -Infinity;
+  const source = new EventSource(streamUrl());
   state.streamOpened = false;
   source.addEventListener("open", handleStreamOpen);
   source.addEventListener("message", handleMessage);
@@ -748,7 +838,6 @@ function startStream() {
   state.source = source;
   state.playing = true;
   state.finished = false;
-  els.speed.disabled = true;
   if (state.mode === MODE_LIVE) {
     setButton(BUTTON_TEXT.running, { pressed: true, disabled: true, title: LIVE_RESTART_TITLE });
   } else {
@@ -829,6 +918,7 @@ function renderSpeed() {
 function wireControls() {
   els.play.addEventListener("click", onPlayClick);
   els.speed.addEventListener("input", renderSpeed);
+  els.speed.addEventListener("input", repacePendingTick);
   els.threshold.addEventListener("input", renderRouting);
   const lightScheme = window.matchMedia(LIGHT_SCHEME_QUERY);
   lightScheme.addEventListener("change", applyChartTheme);
@@ -848,7 +938,11 @@ async function loadMeta() {
 }
 
 function applyMeta(meta) {
+  if (meta.mode !== MODE_LIVE && !(Number.isFinite(meta.max_speed_tps) && meta.max_speed_tps > 0)) {
+    throw new Error(`${API_META} sent an unusable max_speed_tps: ${meta.max_speed_tps}`);
+  }
   state.mode = meta.mode;
+  state.maxSpeedTps = meta.max_speed_tps;
   state.contestants = meta.contestants;
   els.mode.textContent = meta.mode;
   els.runName.textContent = meta.run_name;

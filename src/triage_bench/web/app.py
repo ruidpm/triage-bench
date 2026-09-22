@@ -70,7 +70,8 @@ def create_app(source: EventSource, meta: RunMeta) -> FastAPI:
 
     @app.get("/api/meta")
     async def get_meta() -> dict[str, object]:
-        return asdict(meta)
+        # The dashboard streams replays at the maximum speed and paces them client-side.
+        return {**asdict(meta), "max_speed_tps": MAX_SPEED_TPS}
 
     @app.get("/api/stream")
     async def stream(

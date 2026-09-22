@@ -8,7 +8,7 @@ from triage_bench.application.replay import replay
 from triage_bench.application.runner import TickEvent
 from triage_bench.domain.decision import Decision
 from triage_bench.domain.ticket import Ticket
-from triage_bench.web.app import RunMeta, create_app
+from triage_bench.web.app import MAX_SPEED_TPS, RunMeta, create_app
 
 T = [Ticket(1, "a", "card_arrival"), Ticket(2, "b", "exchange_rate")]
 D = [Decision(1, "von", "card_arrival", 0.9, 10.0, 0, 0, 0.0),
@@ -26,7 +26,17 @@ def make_client(mode: str = "replay") -> TestClient:
 
 def test_meta() -> None:
     assert make_client().get("/api/meta").json() == {
-        "mode": "replay", "run_name": "fixture", "contestants": ["von"]}
+        "mode": "replay", "run_name": "fixture", "contestants": ["von"],
+        "max_speed_tps": MAX_SPEED_TPS}
+
+
+def test_meta_max_speed_is_accepted_by_the_stream() -> None:
+    # The dashboard streams replays at this speed and paces them itself.
+    client = make_client()
+    max_speed = client.get("/api/meta").json()["max_speed_tps"]
+    with client.stream("GET", f"/api/stream?speed={max_speed}") as response:
+        assert response.status_code == 200
+        "".join(response.iter_text())
 
 
 def test_stream_forwards_events_unchanged_then_done() -> None:
