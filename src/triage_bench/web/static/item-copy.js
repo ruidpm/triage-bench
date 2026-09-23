@@ -17,7 +17,7 @@ export function itemCopy(noun) {
     chartHeading: `Latency per ${noun}`,
     chartAria: `Latency per ${noun}, one line per contestant. The contestant cards list p50 latency.`,
     chartAxis: noun,
-    feedHeading: `${capital}s`,
+    feedHeading: plural.charAt(0).toUpperCase() + plural.slice(1),
     routingIncomplete: `a ${noun} is missing a Von or Haiku decision; routing panel stopped`,
     progress: (tick, total) => `${capital} ${tick} of ${total}.`,
     finished: (count) => `Run finished after ${count} ${plural}.`,
