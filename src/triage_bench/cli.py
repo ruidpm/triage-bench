@@ -6,7 +6,7 @@ import sys
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from triage_bench.application.replay import CompleteRun, complete_tickets
 from triage_bench.application.runner import TickEvent
@@ -69,7 +69,9 @@ def default_sample_run_path(task: Task) -> Path:
 def _run_path(args: argparse.Namespace) -> Path:
     """--run if given, else the committed sample run for --task (default task otherwise)."""
     if args.run is not None:
-        return Path(args.run)
+        # args.run is already a Path (argparse parses --run with type=Path); cast because
+        # argparse.Namespace attributes are typed Any.
+        return cast(Path, args.run)
     return default_sample_run_path(TASKS[args.task or DEFAULT_TASK.name])
 
 
