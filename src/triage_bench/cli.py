@@ -28,8 +28,7 @@ REQUIRED_KEYS = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY")
 CONTESTANT_ORDER = ["von", "haiku", "luna"]
 ROUTING_PRIMARY = "von"
 ROUTING_FALLBACK = "haiku"
-DEFAULT_TICKETS = Path("data/tickets.csv")
-DEFAULT_SAMPLE_RUN = Path("runs/sample.jsonl")
+DATA_DIR = Path("data")
 RUNS_DIR = Path("runs")
 RUN_TIMESTAMP_FORMAT = "%Y-%m-%dT%H-%M-%S"
 DEFAULT_HOST = "127.0.0.1"
@@ -57,6 +56,27 @@ def build_openai_client() -> "openai.OpenAI":
 
 def default_run_path(now: datetime) -> Path:
     return RUNS_DIR / f"{now.strftime(RUN_TIMESTAMP_FORMAT)}.jsonl"
+
+
+def default_tickets_path(task: Task) -> Path:
+    return DATA_DIR / f"{task.name}.csv"
+
+
+def default_sample_run_path(task: Task) -> Path:
+    return RUNS_DIR / f"{task.name}-sample.jsonl"
+
+
+def _run_path(args: argparse.Namespace) -> Path:
+    """--run if given, else the committed sample run for --task (default task otherwise)."""
+    if args.run is not None:
+        return Path(args.run)
+    return default_sample_run_path(TASKS[args.task or DEFAULT_TASK.name])
+
+
+def _note_task_mismatch(requested: str | None, run_task: Task, path: Path) -> None:
+    if requested is not None and requested != run_task.name:
+        print(f"note: {path} is a {run_task.name} run; ignoring --task {requested}",
+              file=sys.stderr)
 
 
 def format_totals_table(totals: Sequence[Totals]) -> str:
@@ -120,8 +140,9 @@ def cmd_live(args: argparse.Namespace) -> int:
     if missing:
         return _fail(f"missing environment variables: {', '.join(missing)} (see .env.example)")
     task = TASKS[args.task]
+    tickets_path = args.tickets or default_tickets_path(task)
     try:
-        tickets = load_tickets(args.tickets, task)
+        tickets = load_tickets(tickets_path, task)
     except TicketLoadError as exc:
         return _fail("bad tickets file:\n  " + "\n  ".join(exc.problems))
 
@@ -158,26 +179,30 @@ def cmd_replay(args: argparse.Namespace) -> int:
     from triage_bench.application.replay import replay
     from triage_bench.web.app import MODE_REPLAY, RunMeta
 
+    run_path = _run_path(args)
     try:
-        task, run_data = _read_complete_run(args.run)
+        task, run_data = _read_complete_run(run_path)
     except RunFileError as exc:
         return _fail(str(exc))
+    _note_task_mismatch(args.task, task, run_path)
     present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in run_data.decisions)]
 
     def source() -> Iterator[TickEvent]:
         return replay(run_data.tickets, run_data.decisions, present)
 
-    print(f"replaying {args.run}; open http://{args.host}:{args.port}", file=sys.stderr)
-    meta = RunMeta(mode=MODE_REPLAY, run_name=args.run.stem, contestants=present,
+    print(f"replaying {run_path}; open http://{args.host}:{args.port}", file=sys.stderr)
+    meta = RunMeta(mode=MODE_REPLAY, run_name=run_path.stem, contestants=present,
                    task=task.name, item_noun=task.item_noun)
     return _serve(source, meta, args.host, args.port)
 
 
 def cmd_report(args: argparse.Namespace) -> int:
+    run_path = _run_path(args)
     try:
-        _task, run_data = _read_complete_run(args.run)
+        task, run_data = _read_complete_run(run_path)
     except RunFileError as exc:
         return _fail(str(exc))
+    _note_task_mismatch(args.task, task, run_path)
     truth = {t.id: t.label for t in run_data.tickets}
     by_name = {c: [d for d in run_data.decisions if d.contestant == c] for c in CONTESTANT_ORDER}
     totals = [summarise(c, ds, truth) for c, ds in by_name.items() if ds]
@@ -187,7 +212,7 @@ def cmd_report(args: argparse.Namespace) -> int:
             routing = confidence_gated_report(
                 by_name[ROUTING_PRIMARY], by_name[ROUTING_FALLBACK], truth, args.threshold)
         except ValueError as exc:
-            return _fail(f"cannot compute routing for {args.run}: {exc}")
+            return _fail(f"cannot compute routing for {run_path}: {exc}")
     print(format_totals_table(totals))
     if routing is not None:
         print()
@@ -201,20 +226,22 @@ def build_parser() -> argparse.ArgumentParser:
 
     live = sub.add_parser("live", help="run all contestants for real and serve the dashboard")
     live.add_argument("--task", choices=sorted(TASKS), default=DEFAULT_TASK.name)
-    live.add_argument("--tickets", type=Path, default=DEFAULT_TICKETS)
+    live.add_argument("--tickets", type=Path, default=None)
     live.add_argument("--out", type=Path, default=None)
     live.add_argument("--host", default=DEFAULT_HOST)
     live.add_argument("--port", type=int, default=DEFAULT_PORT)
     live.set_defaults(func=cmd_live)
 
     rep = sub.add_parser("replay", help="serve the dashboard from a saved run, no keys needed")
-    rep.add_argument("--run", type=Path, default=DEFAULT_SAMPLE_RUN)
+    rep.add_argument("--task", choices=sorted(TASKS), default=None)
+    rep.add_argument("--run", type=Path, default=None)
     rep.add_argument("--host", default=DEFAULT_HOST)
     rep.add_argument("--port", type=int, default=DEFAULT_PORT)
     rep.set_defaults(func=cmd_replay)
 
     report = sub.add_parser("report", help="print a markdown summary of a saved run")
-    report.add_argument("--run", type=Path, default=DEFAULT_SAMPLE_RUN)
+    report.add_argument("--task", choices=sorted(TASKS), default=None)
+    report.add_argument("--run", type=Path, default=None)
     report.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
     report.set_defaults(func=cmd_report)
     return parser

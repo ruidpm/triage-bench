@@ -11,6 +11,8 @@ from triage_bench.cli import (
     build_claude_client,
     build_openai_client,
     default_run_path,
+    default_sample_run_path,
+    default_tickets_path,
     format_routing,
     format_totals_table,
     main,
@@ -19,7 +21,7 @@ from triage_bench.cli import (
 from triage_bench.domain.decision import Decision
 from triage_bench.domain.metrics import Totals
 from triage_bench.domain.routing import RoutingReport
-from triage_bench.domain.task import TRIAGE
+from triage_bench.domain.task import SENTIMENT, TRIAGE
 from triage_bench.domain.ticket import Ticket
 from triage_bench.infrastructure.jsonl_sink import JsonlSink
 
@@ -145,3 +147,29 @@ def test_live_rejects_an_unknown_task(capsys) -> None:  # type: ignore[no-untype
         main(["live", "--task", "bogus"])
     assert info.value.code == 2
     assert "invalid choice" in capsys.readouterr().err
+
+
+def test_default_paths_are_named_by_task() -> None:
+    assert default_tickets_path(TRIAGE) == Path("data/triage.csv")
+    assert default_tickets_path(SENTIMENT) == Path("data/sentiment.csv")
+    assert default_sample_run_path(TRIAGE) == Path("runs/triage-sample.jsonl")
+    assert default_sample_run_path(SENTIMENT) == Path("runs/sentiment-sample.jsonl")
+
+
+def test_report_notes_when_task_flag_disagrees_with_the_run_file(  # type: ignore[no-untyped-def]
+    tmp_path, capsys
+) -> None:
+    run_file = tmp_path / "s.jsonl"
+    sink = JsonlSink(run_file)
+    sink.write_header(SENTIMENT, [Ticket(1, "Loved it.", "positive")])
+    sink.write(Decision(1, "von", "positive", 0.9, 10.0, 0, 0, 0.0))
+    assert main(["report", "--task", "triage", "--run", str(run_file)]) == EXIT_OK
+    out, err = capsys.readouterr()
+    assert "| von | 100.0% |" in out
+    assert "is a sentiment run; ignoring --task triage" in err
+
+
+def test_report_default_run_follows_task(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr(cli, "RUNS_DIR", Path("runs-that-do-not-exist"))
+    assert main(["report", "--task", "sentiment"]) == EXIT_CONFIG
+    assert "runs-that-do-not-exist/sentiment-sample.jsonl" in capsys.readouterr().err

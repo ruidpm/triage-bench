@@ -4,9 +4,8 @@ Usage:  uv run --env-file .env python scripts/smoke_live.py [triage|sentiment]
 """
 
 import sys
-from pathlib import Path
 
-from triage_bench.cli import build_claude_client, build_openai_client
+from triage_bench.cli import build_claude_client, build_openai_client, default_tickets_path
 from triage_bench.domain.task import DEFAULT_TASK, TASKS
 from triage_bench.infrastructure.claude_decider import ClaudeDecider
 from triage_bench.infrastructure.csv_tickets import load_tickets
@@ -18,7 +17,7 @@ SMOKE_TICKETS = 3
 
 def main() -> int:
     task = TASKS[sys.argv[1]] if len(sys.argv) > 1 else DEFAULT_TASK
-    tickets = load_tickets(Path("data/tickets.csv"), task)[:SMOKE_TICKETS]
+    tickets = load_tickets(default_tickets_path(task), task)[:SMOKE_TICKETS]
     von = VonDecider.from_sdk(task)
     von.warm_up()
     deciders = [von, ClaudeDecider(build_claude_client(), task),

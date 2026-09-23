@@ -1,4 +1,4 @@
-"""One-off: sample 25 tickets per intent from the Banking77 test split into data/tickets.csv.
+"""One-off: sample 25 tickets per intent from the Banking77 test split into data/triage.csv.
 
 Standard-library only, no extra dependency required.
 Run: `uv run python scripts/sample_banking77.py`
@@ -35,7 +35,7 @@ COMMIT_SHA = "9d081458ff52e53cf7e848f414e6e9344e4e6696"
 TEST_CSV_URL = f"https://raw.githubusercontent.com/{REPO}/{COMMIT_SHA}/banking_data/test.csv"
 SEED = 20260922
 PER_LABEL = 25
-OUT = Path("data/tickets.csv")
+OUT = Path("data/triage.csv")
 
 
 def main() -> None:
