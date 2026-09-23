@@ -149,7 +149,8 @@ def cmd_live(args: argparse.Namespace) -> int:
     def source() -> Iterator[TickEvent]:
         return run(tickets, deciders, sink)
 
-    meta = RunMeta(mode=MODE_LIVE, run_name=out_path.stem, contestants=CONTESTANT_ORDER)
+    meta = RunMeta(mode=MODE_LIVE, run_name=out_path.stem, contestants=CONTESTANT_ORDER,
+                   task=task.name, item_noun=task.item_noun)
     return _serve(source, meta, args.host, args.port)
 
 
@@ -158,7 +159,7 @@ def cmd_replay(args: argparse.Namespace) -> int:
     from triage_bench.web.app import MODE_REPLAY, RunMeta
 
     try:
-        _task, run_data = _read_complete_run(args.run)
+        task, run_data = _read_complete_run(args.run)
     except RunFileError as exc:
         return _fail(str(exc))
     present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in run_data.decisions)]
@@ -167,7 +168,8 @@ def cmd_replay(args: argparse.Namespace) -> int:
         return replay(run_data.tickets, run_data.decisions, present)
 
     print(f"replaying {args.run}; open http://{args.host}:{args.port}", file=sys.stderr)
-    meta = RunMeta(mode=MODE_REPLAY, run_name=args.run.stem, contestants=present)
+    meta = RunMeta(mode=MODE_REPLAY, run_name=args.run.stem, contestants=present,
+                   task=task.name, item_noun=task.item_noun)
     return _serve(source, meta, args.host, args.port)
 
 

@@ -35,6 +35,8 @@ class RunMeta:
     mode: str
     run_name: str
     contestants: list[str]
+    task: str        # Task.name, shown beside the mode badge
+    item_noun: str   # Task.item_noun, replaces "ticket" in the dashboard copy
 
 
 def _sse(data: dict[str, object], event: str | None = None) -> str:

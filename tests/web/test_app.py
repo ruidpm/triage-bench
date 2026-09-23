@@ -20,14 +20,15 @@ def source() -> Iterator[TickEvent]:
 
 
 def make_client(mode: str = "replay") -> TestClient:
-    meta = RunMeta(mode=mode, run_name="fixture", contestants=["von"])
+    meta = RunMeta(mode=mode, run_name="fixture", contestants=["von"],
+                   task="triage", item_noun="ticket")
     return TestClient(create_app(source, meta))
 
 
 def test_meta() -> None:
     assert make_client().get("/api/meta").json() == {
         "mode": "replay", "run_name": "fixture", "contestants": ["von"],
-        "max_speed_tps": MAX_SPEED_TPS}
+        "task": "triage", "item_noun": "ticket", "max_speed_tps": MAX_SPEED_TPS}
 
 
 def test_meta_max_speed_is_accepted_by_the_stream() -> None:
@@ -86,7 +87,8 @@ def failing_source() -> Iterator[TickEvent]:
 
 def test_source_exception_mid_stream_is_not_swallowed() -> None:
     # The stream must not end with a normal "done" frame, which would hide the failure.
-    meta = RunMeta(mode="replay", run_name="fixture", contestants=["von"])
+    meta = RunMeta(mode="replay", run_name="fixture", contestants=["von"],
+                   task="triage", item_noun="ticket")
     client = TestClient(create_app(failing_source, meta))
     with pytest.raises(SourceBrokeError), client.stream("GET", "/api/stream?speed=20") as response:
         "".join(response.iter_text())
