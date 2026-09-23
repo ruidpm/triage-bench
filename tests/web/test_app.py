@@ -94,7 +94,7 @@ def test_source_exception_mid_stream_is_not_swallowed() -> None:
         "".join(response.iter_text())
 
 
-@pytest.mark.parametrize("module", ["app.js", "pacer.js", "latency-points.js"])
+@pytest.mark.parametrize("module", ["app.js", "pacer.js", "latency-points.js", "item-copy.js"])
 def test_dashboard_modules_are_served_as_javascript(module: str) -> None:
     # Browsers refuse to run an ES module served with a non-JavaScript MIME type.
     response = make_client().get(f"/static/{module}")

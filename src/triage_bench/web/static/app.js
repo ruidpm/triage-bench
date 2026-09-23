@@ -18,12 +18,14 @@
 
 import { appendLatencyPoints, isErrorDecision } from "./latency-points.js";
 import { createPacer } from "./pacer.js";
+import { itemCopy } from "./item-copy.js";
 
 const API_META = "/api/meta";
 const API_STREAM = "/api/stream";
 const DONE_EVENT = "done";
 const MODE_LIVE = "live";
 const MS_PER_SECOND = 1000;
+const DEFAULT_ITEM_NOUN = "ticket";
 
 const PLACEHOLDER = "–";
 const PERCENT = 100;
@@ -79,7 +81,6 @@ const MESSAGES = {
   badFrame: "stream sent a frame the dashboard could not read",
   metaFailed: "could not load run details from the server",
   chartMissing: "chart library failed to load; the latency chart is unavailable",
-  routingIncomplete: "a ticket is missing a Von or Haiku decision; routing panel stopped",
 };
 
 // The chart keeps every ticket (200 x 3 points), so it draws lines without point markers
@@ -111,6 +112,7 @@ const THEME = {
 const $ = (id) => document.getElementById(id);
 const els = {
   mode: $("mode"),
+  taskName: $("task-name"),
   runName: $("run-name"),
   tick: $("tick"),
   play: $("play"),
@@ -124,8 +126,10 @@ const els = {
   bannerText: $("banner-text"),
   cards: $("cards"),
   cardTemplate: $("card-template"),
+  currentHeading: $("current-heading"),
   ticketText: $("ticket-text"),
   ticketLabel: $("ticket-label"),
+  chartHeading: $("chart-heading"),
   latency: $("latency"),
   routing: $("routing"),
   routingText: $("routing-text"),
@@ -137,6 +141,7 @@ const els = {
   rFallback: $("r-fallback"),
   rSaving: $("r-saving"),
   feedHeadRow: $("feed-head-row"),
+  feedHeading: $("feed-heading"),
   themeInputs: document.querySelectorAll('input[name="theme"]'),
   feedBody: document.querySelector("#feed tbody"),
 };
@@ -145,6 +150,7 @@ const els = {
 
 const state = {
   mode: "",
+  copy: itemCopy(DEFAULT_ITEM_NOUN),
   contestants: [],
   cards: new Map(),
   history: [],
@@ -372,7 +378,7 @@ function buildChart() {
         x: {
           type: "linear",
           bounds: "data",
-          title: { display: true, text: "ticket" },
+          title: { display: true, text: state.copy.chartAxis },
           grid: { display: false },
           ticks: {
             precision: 0,
@@ -606,7 +612,7 @@ function renderRouting() {
       needed: [ROUTING_PRIMARY, ROUTING_FALLBACK],
     });
     state.routingBroken = true;
-    showBanner(MESSAGES.routingIncomplete);
+    showBanner(state.copy.routingIncomplete);
     clearRoutingValues();
     return;
   }
@@ -660,7 +666,7 @@ function onTick(event) {
   state.lastTotals = event.totals;
   state.lastTick = event.tick;
   if (event.tick % ANNOUNCE_EVERY_TICKS === 0) {
-    announce(`Ticket ${event.tick} of ${event.total}. Accuracy: ${accuracySummary(event.totals)}.`);
+    announce(`${state.copy.progress(event.tick, event.total)} Accuracy: ${accuracySummary(event.totals)}.`);
   }
 }
 
@@ -671,7 +677,7 @@ function resetDisplay() {
   state.lastTick = 0;
   hideBanner();
   renderTickCounter(0, state.lastTotal);
-  els.ticketText.textContent = "Waiting for the first ticket…";
+  els.ticketText.textContent = state.copy.waiting;
   els.ticketLabel.textContent = PLACEHOLDER;
   for (const card of state.cards.values()) {
     resetCard(card);
@@ -764,7 +770,7 @@ function finishRun() {
   closeStream();
   setButton(BUTTON_TEXT.finished, { disabled: true });
   const summary = state.lastTotals ? ` Accuracy: ${accuracySummary(state.lastTotals)}.` : "";
-  announce(`Run finished after ${state.lastTick} tickets.${summary}`);
+  announce(`${state.copy.finished(state.lastTick)}${summary}`);
 }
 
 function handleDone() {
@@ -837,13 +843,13 @@ function startStream() {
 function pauseReplay() {
   pacer.pause();
   setButton(BUTTON_TEXT.resume);
-  announce(`Paused at ticket ${state.lastTick} of ${state.lastTotal}.`);
+  announce(state.copy.paused(state.lastTick, state.lastTotal));
 }
 
 /** Continue from the next unrendered frame. */
 function resumeReplay() {
   setButton(BUTTON_TEXT.pause);
-  announce(`Resumed at ticket ${state.lastTick} of ${state.lastTotal}.`);
+  announce(state.copy.resumed(state.lastTick, state.lastTotal));
   pacer.resume();
 }
 
@@ -943,6 +949,18 @@ async function loadMeta() {
   return response.json();
 }
 
+/** Rewrites every heading, label and placeholder that names the benchmark item. */
+function applyItemCopy() {
+  const copy = state.copy;
+  els.tick.setAttribute("aria-label", copy.counterLabel);
+  els.restart.setAttribute("aria-label", copy.restartLabel);
+  els.currentHeading.textContent = copy.currentHeading;
+  els.ticketText.textContent = copy.waiting;
+  els.chartHeading.textContent = copy.chartHeading;
+  els.latency.setAttribute("aria-label", copy.chartAria);
+  els.feedHeading.textContent = copy.feedHeading;
+}
+
 function applyMeta(meta) {
   if (meta.mode !== MODE_LIVE && !(Number.isFinite(meta.max_speed_tps) && meta.max_speed_tps > 0)) {
     throw new Error(`${API_META} sent an unusable max_speed_tps: ${meta.max_speed_tps}`);
@@ -950,6 +968,9 @@ function applyMeta(meta) {
   state.mode = meta.mode;
   state.maxSpeedTps = meta.max_speed_tps;
   state.contestants = meta.contestants;
+  state.copy = itemCopy(meta.item_noun);
+  els.taskName.textContent = meta.task;
+  applyItemCopy();
   els.mode.textContent = meta.mode;
   els.runName.textContent = meta.run_name;
   els.speedWrap.hidden = meta.mode === MODE_LIVE;

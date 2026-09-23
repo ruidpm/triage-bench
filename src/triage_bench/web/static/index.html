@@ -26,6 +26,7 @@
     <div class="brand">
       <h1>Triage Bench</h1>
       <span id="mode" class="badge"></span>
+      <span id="task-name" class="badge"></span>
       <span id="run-name" class="muted run-name"></span>
     </div>
     <span id="tick" class="tick" aria-label="tickets processed">0 / 0</span>
@@ -57,13 +58,13 @@
     <section id="cards" class="cards" aria-label="Contestants"></section>
 
     <section class="panel ticket">
-      <h2>Current ticket</h2>
+      <h2 id="current-heading">Current ticket</h2>
       <p id="ticket-text" class="ticket-text">Waiting for the first ticket…</p>
       <p class="muted">True label: <code id="ticket-label">–</code></p>
     </section>
 
     <section class="panel chart">
-      <h2>Latency per ticket <span id="chart-caption" class="muted"></span></h2>
+      <h2><span id="chart-heading">Latency per ticket</span> <span id="chart-caption" class="muted"></span></h2>
       <div class="chart-box">
         <canvas id="latency" role="img" aria-label="Latency per ticket, one line per contestant. The contestant cards list p50 latency."></canvas>
       </div>
@@ -82,7 +83,7 @@
     </section>
 
     <section class="panel feed">
-      <h2 id="feed-title">Tickets <span class="muted">newest first</span></h2>
+      <h2 id="feed-title"><span id="feed-heading">Tickets</span> <span class="muted">newest first</span></h2>
       <!-- focusable so keyboard users can scroll it -->
       <div class="table-scroll" role="region" aria-labelledby="feed-title" tabindex="0">
         <table id="feed">
