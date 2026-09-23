@@ -42,3 +42,9 @@ def test_wrong_header_rejected(tmp_path: Path) -> None:
 def test_missing_file(tmp_path: Path) -> None:
     with pytest.raises(TicketLoadError, match="not found"):
         load_tickets(tmp_path / "nope.csv", TRIAGE)
+
+
+def test_loads_sentiment_rows_for_the_sentiment_task(tmp_path: Path) -> None:
+    p = write(tmp_path, 'id,text,label\n5,"Great fit\n\nOrdered a medium, fits well.",positive\n')
+    tickets = load_tickets(p, SENTIMENT)
+    assert tickets[0].label == "positive" and "\n\n" in tickets[0].text

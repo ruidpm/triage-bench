@@ -2,9 +2,9 @@ from collections import Counter
 from pathlib import Path
 
 from triage_bench.domain.task import TRIAGE
-from triage_bench.domain.ticket import LABELS
 from triage_bench.infrastructure.csv_tickets import load_tickets
 
+LABELS = TRIAGE.label_names()
 TICKETS_PER_LABEL = 25
 MAX_SAME_LABEL_RUN = 3
 EARLY_WINDOW = 40

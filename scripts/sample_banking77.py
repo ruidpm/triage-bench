@@ -24,8 +24,9 @@ import random
 import urllib.request
 from pathlib import Path
 
-from triage_bench.domain.ticket import LABELS
+from triage_bench.domain.task import TRIAGE
 
+LABELS = TRIAGE.label_names()
 REPO = "PolyAI-LDN/task-specific-datasets"
 # The only commit that has ever touched banking_data/test.csv (verified via
 # `GET https://api.github.com/repos/PolyAI-LDN/task-specific-datasets/commits?path=banking_data/test.csv`),

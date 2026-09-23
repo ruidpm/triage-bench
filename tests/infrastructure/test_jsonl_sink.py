@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from triage_bench.domain.decision import Decision
-from triage_bench.domain.task import TRIAGE
+from triage_bench.domain.task import SENTIMENT, TRIAGE
 from triage_bench.domain.ticket import Ticket
 from triage_bench.infrastructure.jsonl_sink import JsonlSink, RunFileError, read_run
 
@@ -26,6 +26,12 @@ def test_roundtrip(tmp_path: Path) -> None:
     assert run.task is TRIAGE and run.tickets == T and run.decisions == [D]
     header = json.loads(p.read_text().splitlines()[0])
     assert header["kind"] == "tickets" and header["task"] == "triage"
+
+
+def test_sentiment_header_roundtrips(tmp_path: Path) -> None:
+    p = tmp_path / "run.jsonl"
+    JsonlSink(p).write_header(SENTIMENT, [Ticket(1, "Loved it.", "positive")])
+    assert read_run(p).task is SENTIMENT
 
 
 def test_header_without_task_reports_line_number(tmp_path: Path) -> None:
