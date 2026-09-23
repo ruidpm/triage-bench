@@ -173,3 +173,15 @@ def test_report_default_run_follows_task(monkeypatch, capsys) -> None:  # type: 
     monkeypatch.setattr(cli, "RUNS_DIR", Path("runs-that-do-not-exist"))
     assert main(["report", "--task", "sentiment"]) == EXIT_CONFIG
     assert "runs-that-do-not-exist/sentiment-sample.jsonl" in capsys.readouterr().err
+
+
+def test_replay_notes_when_task_flag_disagrees_with_the_run_file(  # type: ignore[no-untyped-def]
+    tmp_path, capsys, monkeypatch
+) -> None:
+    monkeypatch.setattr(cli, "_serve", lambda *args: EXIT_OK)
+    run_file = tmp_path / "s.jsonl"
+    sink = JsonlSink(run_file)
+    sink.write_header(SENTIMENT, [Ticket(1, "Loved it.", "positive")])
+    sink.write(Decision(1, "von", "positive", 0.9, 10.0, 0, 0, 0.0))
+    assert main(["replay", "--task", "triage", "--run", str(run_file)]) == EXIT_OK
+    assert "is a sentiment run; ignoring --task triage" in capsys.readouterr().err
