@@ -93,7 +93,7 @@ uv run --env-file .env triage-bench live
 ## Caveats
 
 - Von is a stand-in; nothing here measures Jev.
-- Von's model card cites ~18 ms on GPU; this laptop measured 174 ms p50.
+- Von's model card cites ~18 ms on GPU; this laptop measured 174 ms p50 on triage, 136 ms on sentiment.
 - LLM confidence is self-reported, not a computed probability.
 - 200 tickets on 8 intents and 200 reviews on 2 labels are demos; no significance testing.
 - Live API latency includes your network.
