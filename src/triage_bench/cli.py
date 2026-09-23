@@ -12,6 +12,7 @@ from triage_bench.application.replay import CompleteRun, complete_tickets
 from triage_bench.application.runner import TickEvent
 from triage_bench.domain.metrics import Totals, summarise
 from triage_bench.domain.routing import DEFAULT_THRESHOLD, RoutingReport, confidence_gated_report
+from triage_bench.domain.task import DEFAULT_TASK, TASKS
 from triage_bench.infrastructure.csv_tickets import TicketLoadError, load_tickets
 from triage_bench.infrastructure.jsonl_sink import JsonlSink, RunFileError, read_run
 
@@ -117,6 +118,7 @@ def cmd_live(args: argparse.Namespace) -> int:
     missing = missing_keys(os.environ)
     if missing:
         return _fail(f"missing environment variables: {', '.join(missing)} (see .env.example)")
+    task = TASKS[args.task]
     try:
         tickets = load_tickets(args.tickets)
     except TicketLoadError as exc:
@@ -129,14 +131,14 @@ def cmd_live(args: argparse.Namespace) -> int:
     from triage_bench.infrastructure.von_decider import VonDecider
 
     try:
-        von = VonDecider.from_sdk()
+        von = VonDecider.from_sdk(task)
         print("loading Von model (first run downloads ~1.6 GB)...", file=sys.stderr)
         von.warm_up()
     except Exception as exc:  # startup failure: report and exit, never run half a bench
         return _fail(f"Von failed to load: {exc}")
 
     deciders: list[Decider] = [
-        von, ClaudeDecider(build_claude_client()), OpenAIDecider(build_openai_client())
+        von, ClaudeDecider(build_claude_client(), task), OpenAIDecider(build_openai_client(), task)
     ]
     out_path = args.out or default_run_path(datetime.now())
     sink = JsonlSink(out_path)
@@ -195,6 +197,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     live = sub.add_parser("live", help="run all contestants for real and serve the dashboard")
+    live.add_argument("--task", choices=sorted(TASKS), default=DEFAULT_TASK.name)
     live.add_argument("--tickets", type=Path, default=DEFAULT_TICKETS)
     live.add_argument("--out", type=Path, default=None)
     live.add_argument("--host", default=DEFAULT_HOST)

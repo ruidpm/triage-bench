@@ -137,3 +137,10 @@ def test_replay_on_partial_run_streams_complete_tickets_only(  # type: ignore[no
     assert main(["replay", "--run", str(run_file)]) == EXIT_OK
     assert served["ticks"] == [1]
     assert "dropped 1 of 2 tickets" in capsys.readouterr().err
+
+
+def test_live_rejects_an_unknown_task(capsys) -> None:  # type: ignore[no-untyped-def]
+    with pytest.raises(SystemExit) as info:
+        main(["live", "--task", "bogus"])
+    assert info.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err

@@ -3,9 +3,9 @@
 import time
 from typing import Protocol
 
-from triage_bench.application.prompt import INSTRUCTIONS
 from triage_bench.domain.decision import Decision
-from triage_bench.domain.ticket import INTENTS, Ticket
+from triage_bench.domain.task import Task
+from triage_bench.domain.ticket import Ticket
 
 CONTESTANT = "von"
 WARM_UP_TEXT = "warm up"
@@ -24,24 +24,27 @@ class VonEngine(Protocol):
 class VonDecider:
     name = CONTESTANT
 
-    def __init__(self, engine: VonEngine) -> None:
+    def __init__(self, engine: VonEngine, task: Task) -> None:
         self._engine = engine
-        self._choices = {i.label: i.description for i in INTENTS}
+        self._instructions = task.instructions
+        self._choices = task.choices()
 
     @classmethod
-    def from_sdk(cls) -> "VonDecider":
+    def from_sdk(cls, task: Task) -> "VonDecider":
         import von  # local model; imported here so tests never load it
 
-        return cls(von)
+        return cls(von, task)
 
     def warm_up(self) -> None:
-        self._engine.decide(state=WARM_UP_TEXT, choices=self._choices, instructions=INSTRUCTIONS)
+        self._engine.decide(
+            state=WARM_UP_TEXT, choices=self._choices, instructions=self._instructions
+        )
 
     def decide(self, ticket: Ticket) -> Decision:
         started = time.perf_counter()
         try:
             result = self._engine.decide(
-                state=ticket.text, choices=self._choices, instructions=INSTRUCTIONS
+                state=ticket.text, choices=self._choices, instructions=self._instructions
             )
         except Exception as exc:  # adapters must not raise; the runner needs every tick
             return self._error_decision(ticket.id, str(exc))

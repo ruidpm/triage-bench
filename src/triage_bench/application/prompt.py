@@ -1,18 +1,18 @@
-"""The single instruction and label wording shared by every contestant."""
+"""The instruction and label wording shared by every contestant, built from a Task."""
 
-from triage_bench.domain.ticket import INTENTS
+from triage_bench.domain.task import Task
 
-INSTRUCTIONS = "Classify the primary intent of this customer support message."
 LLM_MAX_TOKENS = 64
 
 
-def label_descriptions_text() -> str:
-    return "\n".join(f"{i.label}: {i.description}" for i in INTENTS)
+def label_descriptions_text(task: Task) -> str:
+    return "\n".join(f"{label.name}: {label.description}" for label in task.labels)
 
 
-def llm_system_prompt() -> str:
+def llm_system_prompt(task: Task) -> str:
+    heading = f"{task.label_noun.capitalize()}s"
     return (
-        f"{INSTRUCTIONS}\n\nIntents:\n{label_descriptions_text()}\n\n"
-        "Answer with exactly one intent label and your confidence that it is correct, "
-        "as a number from 0 to 1."
+        f"{task.instructions}\n\n{heading}:\n{label_descriptions_text(task)}\n\n"
+        f"Answer with exactly one {task.label_noun} label and your confidence that it is "
+        "correct, as a number from 0 to 1."
     )
