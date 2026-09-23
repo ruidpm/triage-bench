@@ -1,11 +1,12 @@
-"""Append-only JSONL run files: one header line of tickets, then one line per decision."""
+"""Append-only JSONL run files: one header line of task + tickets, then one line per decision."""
 
 import json
 from collections.abc import Sequence
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from triage_bench.domain.decision import Decision
+from triage_bench.domain.task import TASKS, Task
 from triage_bench.domain.ticket import Ticket
 
 KIND_TICKETS = "tickets"
@@ -16,13 +17,21 @@ class RunFileError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class RunFile:
+    task: Task
+    tickets: list[Ticket]
+    decisions: list[Decision]
+
+
 class JsonlSink:
     def __init__(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         self._path = path
 
-    def write_header(self, tickets: Sequence[Ticket]) -> None:
-        self._append({"kind": KIND_TICKETS, "tickets": [asdict(t) for t in tickets]})
+    def write_header(self, task: Task, tickets: Sequence[Ticket]) -> None:
+        self._append({"kind": KIND_TICKETS, "task": task.name,
+                      "tickets": [asdict(t) for t in tickets]})
 
     def write(self, decision: Decision) -> None:
         self._append({"kind": KIND_DECISION, **asdict(decision)})
@@ -32,9 +41,19 @@ class JsonlSink:
             handle.write(json.dumps(record) + "\n")
 
 
-def read_run(path: Path) -> tuple[list[Ticket], list[Decision]]:
+def _header_task(record: dict[str, object], number: int) -> Task:
+    name = record.get("task")
+    if name is None:
+        raise RunFileError(f"line {number}: tickets header has no task")
+    if not isinstance(name, str) or name not in TASKS:
+        raise RunFileError(f"line {number}: unknown task {name!r} (known: {sorted(TASKS)})")
+    return TASKS[name]
+
+
+def read_run(path: Path) -> RunFile:
     if not path.exists():
         raise RunFileError(f"run file not found: {path}")
+    task: Task | None = None
     tickets: list[Ticket] | None = None
     decisions: list[Decision] = []
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -49,11 +68,14 @@ def read_run(path: Path) -> tuple[list[Ticket], list[Decision]]:
             raise RunFileError("run file has no tickets header line")
         try:
             if kind == KIND_TICKETS:
+                task = _header_task(record, number)
                 tickets = [Ticket(**t) for t in record["tickets"]]
+                for ticket in tickets:
+                    task.validate_label(ticket.label)
             else:
                 decisions.append(Decision(**record))
         except (KeyError, TypeError, ValueError) as exc:
             raise RunFileError(f"line {number}: invalid {kind} record ({exc})") from exc
-    if tickets is None:
+    if task is None or tickets is None:
         raise RunFileError("run file has no tickets header line")
-    return tickets, decisions
+    return RunFile(task=task, tickets=tickets, decisions=decisions)

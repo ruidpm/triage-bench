@@ -12,7 +12,7 @@ from triage_bench.application.replay import CompleteRun, complete_tickets
 from triage_bench.application.runner import TickEvent
 from triage_bench.domain.metrics import Totals, summarise
 from triage_bench.domain.routing import DEFAULT_THRESHOLD, RoutingReport, confidence_gated_report
-from triage_bench.domain.task import DEFAULT_TASK, TASKS
+from triage_bench.domain.task import DEFAULT_TASK, TASKS, Task
 from triage_bench.infrastructure.csv_tickets import TicketLoadError, load_tickets
 from triage_bench.infrastructure.jsonl_sink import JsonlSink, RunFileError, read_run
 
@@ -85,22 +85,23 @@ def _fail(message: str) -> int:
     return EXIT_CONFIG
 
 
-def _read_complete_run(path: Path) -> CompleteRun:
+def _read_complete_run(path: Path) -> tuple[Task, CompleteRun]:
     """Read a run and trim it to tickets every present contestant answered.
 
     Raises RunFileError when the file is unreadable or has nothing to show.
     """
-    tickets, decisions = read_run(path)
-    present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in decisions)]
+    run_file = read_run(path)
+    present = [c for c in CONTESTANT_ORDER
+               if any(d.contestant == c for d in run_file.decisions)]
     if not present:
         raise RunFileError(f"run file has no decisions: {path}")
-    kept = complete_tickets(tickets, decisions, present)
+    kept = complete_tickets(run_file.tickets, run_file.decisions, present)
     if not kept.tickets:
         raise RunFileError(f"no ticket in {path} was answered by every contestant ({present})")
     if kept.dropped:
-        print(f"note: dropped {kept.dropped} of {len(tickets)} tickets not answered by every "
-              f"contestant (partial run)", file=sys.stderr)
-    return kept
+        print(f"note: dropped {kept.dropped} of {len(run_file.tickets)} tickets not answered "
+              f"by every contestant (partial run)", file=sys.stderr)
+    return run_file.task, kept
 
 
 def _serve(source_factory: "EventSource", meta: "RunMeta", host: str, port: int) -> int:
@@ -142,7 +143,7 @@ def cmd_live(args: argparse.Namespace) -> int:
     ]
     out_path = args.out or default_run_path(datetime.now())
     sink = JsonlSink(out_path)
-    sink.write_header(tickets)
+    sink.write_header(task, tickets)
     print(f"writing run to {out_path}; open http://{args.host}:{args.port}", file=sys.stderr)
 
     def source() -> Iterator[TickEvent]:
@@ -157,7 +158,7 @@ def cmd_replay(args: argparse.Namespace) -> int:
     from triage_bench.web.app import MODE_REPLAY, RunMeta
 
     try:
-        run_data = _read_complete_run(args.run)
+        _task, run_data = _read_complete_run(args.run)
     except RunFileError as exc:
         return _fail(str(exc))
     present = [c for c in CONTESTANT_ORDER if any(d.contestant == c for d in run_data.decisions)]
@@ -172,7 +173,7 @@ def cmd_replay(args: argparse.Namespace) -> int:
 
 def cmd_report(args: argparse.Namespace) -> int:
     try:
-        run_data = _read_complete_run(args.run)
+        _task, run_data = _read_complete_run(args.run)
     except RunFileError as exc:
         return _fail(str(exc))
     truth = {t.id: t.label for t in run_data.tickets}

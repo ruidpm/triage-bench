@@ -19,6 +19,7 @@ from triage_bench.cli import (
 from triage_bench.domain.decision import Decision
 from triage_bench.domain.metrics import Totals
 from triage_bench.domain.routing import RoutingReport
+from triage_bench.domain.task import TRIAGE
 from triage_bench.domain.ticket import Ticket
 from triage_bench.infrastructure.jsonl_sink import JsonlSink
 
@@ -82,7 +83,7 @@ PARTIAL_RUN = FULL_RUN[:3]
 
 def write_run(path: Path, decisions: list[Decision]) -> Path:
     sink = JsonlSink(path)
-    sink.write_header(TICKETS)
+    sink.write_header(TRIAGE, TICKETS)
     for decision in decisions:
         sink.write(decision)
     return path
