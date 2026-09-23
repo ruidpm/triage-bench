@@ -16,6 +16,8 @@ SMOKE_TICKETS = 3
 
 
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] not in TASKS:
+        raise SystemExit(f"{sys.argv[1]}: not a task, choose one of {sorted(TASKS)}")
     task = TASKS[sys.argv[1]] if len(sys.argv) > 1 else DEFAULT_TASK
     tickets = load_tickets(default_tickets_path(task), task)[:SMOKE_TICKETS]
     von = VonDecider.from_sdk(task)
