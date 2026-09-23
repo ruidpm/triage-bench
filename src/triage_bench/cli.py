@@ -120,7 +120,7 @@ def cmd_live(args: argparse.Namespace) -> int:
         return _fail(f"missing environment variables: {', '.join(missing)} (see .env.example)")
     task = TASKS[args.task]
     try:
-        tickets = load_tickets(args.tickets)
+        tickets = load_tickets(args.tickets, task)
     except TicketLoadError as exc:
         return _fail("bad tickets file:\n  " + "\n  ".join(exc.problems))
 

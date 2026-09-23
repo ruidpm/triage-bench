@@ -18,7 +18,7 @@ SMOKE_TICKETS = 3
 
 def main() -> int:
     task = TASKS[sys.argv[1]] if len(sys.argv) > 1 else DEFAULT_TASK
-    tickets = load_tickets(Path("data/tickets.csv"))[:SMOKE_TICKETS]
+    tickets = load_tickets(Path("data/tickets.csv"), task)[:SMOKE_TICKETS]
     von = VonDecider.from_sdk(task)
     von.warm_up()
     deciders = [von, ClaudeDecider(build_claude_client(), task),
