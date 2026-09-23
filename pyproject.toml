@@ -1,7 +1,7 @@
 [project]
 name = "triage-bench"
 version = "0.1.0"
-description = "Live benchmark: a local System One decision model vs standard LLMs on support-ticket triage"
+description = "Live benchmark: a local System One decision model vs standard LLMs on support-ticket triage and review sentiment"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
