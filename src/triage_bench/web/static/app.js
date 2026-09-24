@@ -43,7 +43,7 @@ const DIGITS = {
   cost: 4,
   ece: 3,
   latency: 0,
-  share: 0,
+  share: 1,
   speed: 1,
   threshold: 2,
 };

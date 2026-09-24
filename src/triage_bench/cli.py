@@ -36,6 +36,9 @@ DEFAULT_PORT = 8000
 # The SDKs' own retry-with-backoff on 429/5xx would otherwise run inside our measured
 # decide() latency; disabling it means a rate limit surfaces as a visible error instead.
 SDK_MAX_RETRIES = 0
+# Routing shares (handled locally, cost saving) keep one decimal: with 200 items each item
+# is 0.5%, so whole percents hide single routed items. web/static/app.js DIGITS.share mirrors it.
+SHARE_DIGITS = 1
 
 
 def missing_keys(env: Mapping[str, str]) -> list[str]:
@@ -94,11 +97,11 @@ def format_totals_table(totals: Sequence[Totals]) -> str:
 def format_routing(r: RoutingReport) -> str:
     return (
         f"Routing at threshold {r.threshold:.2f}: {r.primary} handled "
-        f"{r.handled_locally_share:.0%} locally, rest to {r.fallback}.\n"
+        f"{r.handled_locally_share:.{SHARE_DIGITS}%} locally, rest to {r.fallback}.\n"
         f"  routed:   accuracy {r.routed_accuracy:.1%}, cost ${r.routed_cost_usd:.4f}\n"
         f"  {r.fallback} alone: accuracy {r.fallback_accuracy:.1%}, "
         f"cost ${r.fallback_cost_usd:.4f}\n"
-        f"  cost saving: {r.cost_saving_share:.0%}"
+        f"  cost saving: {r.cost_saving_share:.{SHARE_DIGITS}%}"
     )
 
 

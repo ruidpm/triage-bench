@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from triage_bench.cli import (
     EXIT_CONFIG,
     EXIT_OK,
     SDK_MAX_RETRIES,
+    SHARE_DIGITS,
     build_claude_client,
     build_openai_client,
     default_run_path,
@@ -39,10 +41,27 @@ def test_totals_table_is_markdown() -> None:
     assert "| von | 88.5% | 101 | 180 | $0.0000 | 0.061 |" in table
 
 
+def test_routing_shares_keep_one_decimal_so_a_single_routed_item_shows() -> None:
+    # 199 of 200 handled locally must not print as "100%": with 200 items each one is 0.5%.
+    r = RoutingReport(0.8, "von", "haiku", 0.995, 0.98, 0.0006, 0.97, 0.1071, 0.9944)
+    text = format_routing(r)
+    assert "handled 99.5% locally" in text
+    assert "cost saving: 99.4%" in text
+
+
+def test_dashboard_formats_shares_with_the_report_precision() -> None:
+    # The dashboard mirrors the report's number formatting; a drift would show one number
+    # in the terminal and another on screen.
+    app_js = Path("src/triage_bench/web/static/app.js").read_text(encoding="utf-8")
+    match = re.search(r"^\s*share: (\d+),$", app_js, re.MULTILINE)
+    assert match is not None
+    assert int(match.group(1)) == SHARE_DIGITS
+
+
 def test_routing_text_mentions_key_numbers() -> None:
     r = RoutingReport(0.8, "von", "haiku", 0.72, 0.91, 0.031, 0.93, 0.110, 0.72)
     text = format_routing(r)
-    assert "72%" in text and "0.80" in text and "haiku" in text
+    assert "72.0%" in text and "0.80" in text and "haiku" in text
 
 
 def test_default_run_path_is_timestamped() -> None:
