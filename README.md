@@ -2,7 +2,7 @@
 
 A local System One decision model against two hosted LLMs on two tasks — 8-way support-ticket intent triage and binary customer-review sentiment — streamed item by item to a live dashboard.
 
-![Dashboard at ticket 120 of 200: cards for Von (96.7%, 176 ms p50), Claude Haiku 4.5 (100.0%, 906 ms) and GPT-5.6 Luna (99.2%, 1214 ms), a log-scale latency chart, and the routing panel with Von handling 95% locally](docs/screenshots/dashboard-mid-run.png)
+![Dashboard at ticket 120 of 200: cards for Von (96.7%, 176 ms p50), Claude Haiku 4.5 (100.0%, 906 ms) and GPT-5.6 Luna (99.2%, 1214 ms), a log-scale latency chart, and the routing panel with Von handling 95.0% locally](docs/screenshots/dashboard-mid-run.png)
 
 ## Contestants
 
@@ -30,10 +30,10 @@ ECE is expected calibration error: lower is better. Routing keeps Von's answer w
 
 The report's routing summary at threshold 0.80, restated:
 
-- Handled locally by Von: 97%, rest to Haiku.
+- Handled locally by Von: 97.0%, rest to Haiku.
 - Routed: accuracy 97.5%, cost $0.0038.
 - Haiku alone: accuracy 100.0%, cost $0.1256.
-- Cost saving: 97%.
+- Cost saving: 97.0%.
 
 ### Sentiment: 200 Amazon Polarity reviews
 
@@ -47,10 +47,10 @@ The report's routing summary at threshold 0.80, restated:
 
 Routing summary at threshold 0.80, restated:
 
-- Handled locally by Von: 99.5% (199 of 200), rest to Haiku.
+- Handled locally by Von: 99.5%, rest to Haiku.
 - Routed: accuracy 98.0%, cost $0.0006.
 - Haiku alone: accuracy 97.0%, cost $0.1071.
-- Cost saving: 99%.
+- Cost saving: 99.4%.
 
 ## Quick start: replay (no keys)
 
@@ -79,7 +79,7 @@ uv run --env-file .env triage-bench live
 
 | Finished run | Threshold at 0.95 | Phone (390 px) | Sentiment run |
 |---|---|---|---|
-| ![Finished run at 200 of 200 with final totals, latency chart of all 200 tickets and the scrollable tickets feed](docs/screenshots/dashboard-finished.png) | ![Routing threshold slider at 0.95: 93% handled locally, 98.5% routed accuracy, 93% cost saving](docs/screenshots/dashboard-threshold-095.png) | ![Single-column phone layout at ticket 120: controls, stacked cards, chart and routing panel](docs/screenshots/dashboard-phone.png) | ![Finished sentiment run at 200 of 200 with the review feed](docs/screenshots/sentiment/dashboard-finished.png) |
+| ![Finished run at 200 of 200 with final totals, latency chart of all 200 tickets and the scrollable tickets feed](docs/screenshots/dashboard-finished.png) | ![Routing threshold slider at 0.95: 93.0% handled locally, 98.5% routed accuracy, 93.0% cost saving](docs/screenshots/dashboard-threshold-095.png) | ![Single-column phone layout at ticket 120: controls, stacked cards, chart and routing panel](docs/screenshots/dashboard-phone.png) | ![Finished sentiment run at 200 of 200 with the review feed](docs/screenshots/sentiment/dashboard-finished.png) |
 
 ## Fairness
 
